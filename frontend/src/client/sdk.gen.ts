@@ -44,9 +44,129 @@ import type {
   UtilsTestEmailData,
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
+  TodosAddCollaboratorResponse,
+  TodosReadCollaboratorTodosData,
+  TodosReadCollaboratorTodosResponse,
+  Message
 } from "./types.gen"
 
 export class TodosService {
+  /**
+ * Add Collaborator
+ * Add collaborator to todo.
+ * @param data The data for the request.
+ * @param data.collaborator_invite_code - Mã mời cộng tác viên.
+ * @returns TodosAddCollaboratorResponse Successful Response
+ * @throws ApiError
+ */
+  public static inviteCollaborator(
+    data: {todo_id: string, invite_code: string },
+  ): CancelablePromise<TodosAddCollaboratorResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/todos/{todo_id}/invite",
+      path: {
+        todo_id: data.todo_id
+      },
+      mediaType: "application/json",
+      body: { invite_code: data.invite_code },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+ * Get Collaborators for Todo
+ * Lấy danh sách cộng tác viên của một Todo.
+ * @param data The data for the request.
+ * @param data.todo_id - ID của Todo cần lấy danh sách cộng tác viên
+ * @returns Array of Users Successful Response
+ * @throws ApiError
+ */
+public static getCollaboratorsForTodo(
+  data: { todo_id: string },
+): CancelablePromise<TodosAddCollaboratorResponse[]> {
+  return __request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/todos/{todo_id}/collaborators",
+    path: {
+      todo_id: data.todo_id,
+    },
+    errors: {
+      422: "Validation Error",
+    },
+  })
+}
+
+
+/**
+ * Remove Collaborator from Todo
+ * Xóa cộng tác viên khỏi Todo.
+ * @param data The data for the request.
+ * @param data.todo_id - ID của Todo cần xóa cộng tác viên
+ * @param data.collaborator_user_id - ID của người dùng cộng tác viên
+ * @returns TodosRemoveCollaboratorResponse Successful Response
+ * @throws ApiError
+ */
+public static removeCollaboratorFromTodo(
+  data: { todo_id: string, collaborator_user_id: string },
+): CancelablePromise<TodosAddCollaboratorResponse> {
+  return __request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/todos/{todo_id}/collaborators/{user_id}",
+    path: {
+      todo_id: data.todo_id,
+      user_id: data.collaborator_user_id,
+    },
+    errors: {
+      422: "Validation Error",
+    },
+  })
+}
+
+
+
+
+/**
+ * Check Access for Todo
+ * Kiểm tra quyền truy cập của người dùng đối với Todo.
+ * @param data The data for the request.
+ * @param data.todo_id - ID của Todo cần kiểm tra quyền truy cập
+ * @returns Message Successful Response
+ * @throws ApiError
+ */
+public static checkAccessForTodo(
+  data: { todo_id: string },
+): CancelablePromise<Message> {
+  return __request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/todos/{todo_id}/access",
+    path: {
+      todo_id: data.todo_id,
+    },
+    errors: {
+      422: "Validation Error",
+    },
+  })
+}
+public static getTodoForCollaborator(
+  data: TodosReadCollaboratorTodosData 
+): CancelablePromise<TodosReadCollaboratorTodosResponse> {
+  console.log(data)
+  return __request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/todos/collaborated",
+    query: { 
+      skip: data.skip,
+      limit: data.limit
+    },
+    errors: {
+      400: "Validation Error",
+    },
+  })
+}
+
   /**
    * Read Todos
    * Retrieve items.
@@ -165,6 +285,10 @@ export class TodosService {
       },
     })
   }
+
+
+
+
 }
 
 export class LoginService {

@@ -41,6 +41,14 @@ function getTodosQueryOptions({ page }: { page: number }) {
   }
 }
 
+function getCollaboratedTodosQueryOptions({ page }: { page: number }) {
+  return {
+    queryFn: () =>
+      TodosService.getTodoForCollaborator({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
+    queryKey: ["collaborations", { page }],
+  }
+}
+
 function TodosTable() {
   const queryClient = useQueryClient()
   const { page } = Route.useSearch()
@@ -160,6 +168,125 @@ function TodosTable() {
   )
 }
 
+function TodosCollaboratorTable() {
+  const queryClient = useQueryClient()
+  const { page } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  const setPage = (page: number) =>
+    navigate({ search: (prev: {[key: string]: string}) => ({ ...prev, page }) })
+  const {
+    data: items,
+    isPending,
+    isPlaceholderData,
+  } = useQuery({
+    ...getCollaboratedTodosQueryOptions({ page }),
+    placeholderData: (prevData) => prevData,
+  })
+
+  const hasNextPage = !isPlaceholderData && items?.data.length === PER_PAGE
+  const hasPreviousPage = page > 1
+
+  useEffect(() => {
+    if (hasNextPage) {
+      queryClient.prefetchQuery(getCollaboratedTodosQueryOptions({ page: page + 1 }))
+    }
+  }, [page, queryClient, hasNextPage])
+  
+  const changeStatus = async (todoId: string, newStatus: "pending" | "completed" | "in_progress") => {
+    try {
+      // Optimistic update
+      queryClient.setQueryData(["collaborations", { page }], (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          data: oldData.data.map((todo: any) =>
+            todo.id === todoId ? { ...todo, status: newStatus } : todo
+          ),
+        };
+      });
+  
+      // Call API to persist changes
+      await TodosService.updateTodo({ id: todoId, requestBody: { status: newStatus } });
+  
+      // Optionally refresh data after successful update
+      queryClient.invalidateQueries({ queryKey: ["collaborations"], exact: true, refetchType: "active" });
+    } catch (error) {
+      console.error("Failed to change status", error);
+    }
+  };
+
+  return (
+    <>
+      <TableContainer>
+        <Table size={{ base: "sm", md: "md" }}>
+          <Thead>
+            <Tr>
+              <Th>ID</Th>
+              <Th>Title</Th>
+              <Th>Description</Th>
+              <Th>Status</Th>
+              <Th>Actions</Th>
+            </Tr>
+          </Thead>
+          {isPending ? (
+            <Tbody>
+              <Tr>
+                {new Array(4).fill(null).map((_, index) => (
+                  <Td key={index}>
+                    <SkeletonText noOfLines={1} paddingBlock="16px" />
+                  </Td>
+                ))}
+              </Tr>
+            </Tbody>
+          ) : (
+            <Tbody>
+              {items?.data.map((todo) => (
+                <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
+                  <Td>{todo.id}</Td>
+                  <Td isTruncated maxWidth="150px">
+                    {todo.title}
+                  </Td>
+                  <Td
+                    color={!todo.desc ? "ui.dim" : "inherit"}
+                    isTruncated
+                    maxWidth="150px"
+                  >
+                    {todo.desc || "N/A"}
+                  </Td>
+                  <Td>
+                    {todo.status === "in_progress" ? (
+                      <Button size="sm" colorScheme="blue" onClick={() => changeStatus(todo.id, "pending")}>
+                        In Progress
+                      </Button>
+                    ) : todo.status === "completed" ? (
+                      <Button size="sm" colorScheme="green" onClick={() => changeStatus(todo.id, "in_progress")}>
+                        Completed
+                      </Button>
+                    ) : (
+                      <Button size="sm" colorScheme="yellow" onClick={() => changeStatus(todo.id, "completed")}>
+                        Pending
+                      </Button>
+                    )}
+                  </Td>
+                  <Td>
+                    <ActionsMenu type={"Todo"} value={todo} />
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          )}
+        </Table>
+      </TableContainer>
+      <PaginationFooter
+        page={page}
+        onChangePage={setPage}
+        hasNextPage={hasNextPage}
+        hasPreviousPage={hasPreviousPage}
+      />
+    </>
+  )
+}
+
 function Todos() {
   return (
     <Container maxW="full">
@@ -169,6 +296,11 @@ function Todos() {
 
       <Navbar type={"Todo"} addModalAs={AddTodo} />
       <TodosTable />
+      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
+        Collaborated To Do 
+      </Heading>
+      <TodosCollaboratorTable />
+      
     </Container>
   )
 }

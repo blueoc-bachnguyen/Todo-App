@@ -7,12 +7,13 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import {  BsThreeDotsVertical } from "react-icons/bs"
-import {FiEdit, FiPlus, FiTrash } from "react-icons/fi"
+import {FiEdit, FiPlus, FiTrash, FiUsers } from "react-icons/fi"
 
 import type { TodoPublic, UserPublic } from "../../client"
 import EditUser from "../Admin/EditUser"
 import Edittodos from "../todos/Edittodos"
 import Delete from "./DeleteAlert"
+import InviteCollaborators from "../todos/AddCollaborator"
 
 interface ActionsMenuProps {
   type: string
@@ -23,11 +24,11 @@ interface ActionsMenuProps {
 const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
   const editUserModal = useDisclosure()
   const deleteModal = useDisclosure()
+  const InviteCollaboratorsModal = useDisclosure()
   const addSubtask = () => {
     console.log("add subtask")
   }
-
-
+  
   return (
     <>
       <Menu>
@@ -44,6 +45,15 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           >
             Edit {type}
           </MenuItem>
+
+          <MenuItem
+            onClick={InviteCollaboratorsModal.onOpen}
+            icon={<FiUsers fontSize="16px" />}
+            color="unstyled"
+          >
+            Add collaborators
+          </MenuItem>
+
           <MenuItem
             onClick={addSubtask}
             icon={<FiPlus fontSize="16px" />}
@@ -78,6 +88,11 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           onClose={deleteModal.onClose}
         />
       </Menu>
+      
+      <InviteCollaborators
+        todo_id={value.id}
+        isOpen={InviteCollaboratorsModal.isOpen}
+        onClose={InviteCollaboratorsModal.onClose}/>
     </>
   )
 }

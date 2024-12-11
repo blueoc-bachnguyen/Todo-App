@@ -70,6 +70,7 @@ export type UserPublic = {
   is_superuser?: boolean
   full_name?: string | null
   id: string
+  invite_code?: string
 }
 
 export type UserRegister = {
@@ -108,6 +109,14 @@ export type TodosReadTodosData = {
 }
 
 export type TodosReadTodosResponse = TodosPublic
+
+export type TodosReadCollaboratorTodosData = {
+  limit?: number
+  skip?: number
+  user_id: string
+}
+
+export type TodosReadCollaboratorTodosResponse = TodosPublic
 
 export type TodosCreateTodoData = {
   requestBody: TodoCreate
@@ -221,3 +230,18 @@ export type UtilsTestEmailData = {
 export type UtilsTestEmailResponse = Message
 
 export type UtilsHealthCheckResponse = boolean
+
+export interface TodosAddCollaboratorData {
+  todo_id: string; // ID của Todo
+  invite_code: string; // Mã mời cộng tác viên
+}
+
+export interface TodosAddCollaboratorResponse {
+  message: string; // Thông điệp xác nhận thành công
+}
+
+export type CollaboratorLeaveTodoData = {
+  id: string
+}
+
+export type CollaboratorLeaveTodoResponse = Message
