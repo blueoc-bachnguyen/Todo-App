@@ -24,10 +24,10 @@ import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
-import Delete from '../../components/Common/DeleteAlert.tsx';
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Common/Navbar.tsx';
 import AddTodo from '../../components/todos/Addtodos.tsx';
+import Delete from '../../components/Common/DeleteAlert.tsx';
 import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
 import EditSubTodo from '../../components/subtodos/EditSubTodo.tsx';
 import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
@@ -115,7 +115,6 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
   useEffect(() => {
     if (hasNextPage) {
       queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
-      queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
     }
   }, [page, queryClient, hasNextPage]);
 
@@ -172,17 +171,6 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         todo_id: todoId,
         requestBody: { status: newStatus },
       });
-
-      // if (selectedSubTodoId) {
-      //   queryClient.invalidateQueries(['subtodos'], {
-      //     exact: true,
-      //   });
-      // }
-      // queryClient.invalidateQueries({
-      //   queryKey: ['subtodos'],
-      //   exact: true,
-      //   refetchType: 'active',
-      // });
       refetch();
     } catch (error) {
       console.error('Failed to change status', error);
@@ -226,58 +214,74 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
             </Tbody>
           ) : (
             <Tbody>
-              {todos?.data.map((todo) => (
-                <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
-                  <Td>{todo.id}</Td>
-                  <Td isTruncated maxWidth="150px">
-                    {todo.title}
-                  </Td>
-                  <Td
-                    color={!todo.desc ? 'ui.dim' : 'inherit'}
-                    isTruncated
-                    maxWidth="150px"
-                  >
-                    {todo.desc || 'N/A'}
-                  </Td>
-                  <Td>
-                    {todo.status === 'in_progress' ? (
-                      <Button
-                        size="sm"
-                        colorScheme="blue"
-                        onClick={() => changeTodoStatus(todo.id, 'pending')}
-                      >
-                        In Progress
-                      </Button>
-                    ) : todo.status === 'completed' ? (
-                      <Button
-                        size="sm"
-                        colorScheme="green"
-                        onClick={() => changeTodoStatus(todo.id, 'in_progress')}
-                      >
-                        Completed
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        colorScheme="yellow"
-                        onClick={() => changeTodoStatus(todo.id, 'completed')}
-                      >
-                        Pending
-                      </Button>
-                    )}
-                  </Td>
-                  <Td>
-                    <ActionsMenu type={'Todo'} value={todo} />
-                  </Td>
-                  <Td>
-                    <IoIosList
-                      size={20}
-                      onClick={() => handleListClick(todo.id)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  </Td>
-                </Tr>
-              ))}
+              {todos?.data
+                ?.filter(
+                  (todo) =>
+                    todo.title
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    todo.desc
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    todo.status
+                      .replace('_', ' ')
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                )
+                .map((todo) => (
+                  <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
+                    <Td>{todo.id}</Td>
+                    <Td isTruncated maxWidth="150px">
+                      {todo.title}
+                    </Td>
+                    <Td
+                      color={!todo.desc ? 'ui.dim' : 'inherit'}
+                      isTruncated
+                      maxWidth="150px"
+                    >
+                      {todo.desc || 'N/A'}
+                    </Td>
+                    <Td>
+                      {todo.status === 'in_progress' ? (
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() => changeTodoStatus(todo.id, 'pending')}
+                        >
+                          In Progress
+                        </Button>
+                      ) : todo.status === 'completed' ? (
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          onClick={() =>
+                            changeTodoStatus(todo.id, 'in_progress')
+                          }
+                        >
+                          Completed
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          colorScheme="yellow"
+                          onClick={() => changeTodoStatus(todo.id, 'completed')}
+                        >
+                          Pending
+                        </Button>
+                      )}
+                    </Td>
+                    <Td>
+                      <ActionsMenu type={'Todo'} value={todo} />
+                    </Td>
+                    <Td>
+                      <IoIosList
+                        size={20}
+                        onClick={() => handleListClick(todo.id)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </Td>
+                  </Tr>
+                ))}
             </Tbody>
           )}
         </Table>
@@ -428,7 +432,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
 }
 
 function Todos() {
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Trạng thái lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Trạng thái lưu từ khóa tìm kiếm
 
   const handleSearch = (search: string) => {
     setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
@@ -440,7 +444,7 @@ function Todos() {
         Todo List Management
       </Heading>
       <Navbar
-        type={"Todo"}
+        type={'Todo'}
         addModalAs={AddTodo}
         onSearch={handleSearch}
         search={searchQuery}
