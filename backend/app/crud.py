@@ -64,7 +64,7 @@ def create_subtodo(*, session: Session, item_in: SubTodoCreate, owner_id: uuid.U
 
 # New function query for inviting collaborators
 def add_collaborator_by_invite_code(
-    *, session: Session, todo_id: uuid.UUID, invite_code: str, is_owner: bool = False
+    *, session: Session, todo_id: uuid.UUID, invite_code: str
 ) -> CollaboratorUpdate:  # Đảm bảo kiểu trả về là CollaboratorUpdate
     user = session.exec(select(User).where(User.invite_code == invite_code)).first()
     if not user:
@@ -77,13 +77,13 @@ def add_collaborator_by_invite_code(
         raise ValueError("Cộng tác viên đã tồn tại cho Todo này.")
 
     # Thêm cộng tác viên mới
-    collaborator = Collaborator(todo_id=todo_id, user_id=user.id, is_owner=is_owner)
+    collaborator = Collaborator(todo_id=todo_id, user_id=user.id)
     session.add(collaborator)
     session.commit()
     session.refresh(collaborator)
 
     # Trả về đối tượng phù hợp với CollaboratorUpdate
-    return CollaboratorUpdate(invite_code=invite_code, is_owner=collaborator.is_owner)
+    return CollaboratorUpdate(invite_code=invite_code)
 
 
 # # getCollaboratedTodos

@@ -6,7 +6,6 @@ from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
-
 # Shared properties
 class UserBase(SQLModel):
     id: uuid.UUID | None = Field(default_factory=uuid.uuid4)  # Make `id` optional with default factory
@@ -15,8 +14,15 @@ class UserBase(SQLModel):
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
 
-# Properties for return Collaborator
-class Collaborator(SQLModel, table=True):
+# Định nghĩa Enum cho trạng thái
+class CollaborationStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPT = "accept"
+    REJECT = "reject"
+class CollaboratorBase(SQLModel):
+    status: CollaborationStatus = Field(default=CollaborationStatus.PENDING)
+    created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
+class Collaborator(CollaboratorBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     todo_id: uuid.UUID = Field(
         foreign_key="todo.id", nullable=False, ondelete="CASCADE"
@@ -24,25 +30,21 @@ class Collaborator(SQLModel, table=True):
     user_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
-    is_owner: bool = Field(default=False)  # Marks the primary owner
-    created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
-
     todo: Optional["Todo"] = Relationship(back_populates="collaborators")
-    user: Optional["User"] = Relationship()
+    user: Optional["User"] = Relationship(back_populates="collaborations")
+
 
 class CollaboratorCreate(SQLModel):
     todo_id: uuid.UUID
     user_id: uuid.UUID
 
 class CollaboratorUpdate(SQLModel):
-    is_owner: bool = False
     invite_code: str
 
 class CollaboratorPublic(SQLModel):
     id: uuid.UUID
     todo_id: uuid.UUID
     user_id: uuid.UUID
-    is_owner: bool
     created_at: datetime
 
 
@@ -78,12 +80,19 @@ class User(UserBase, table=True):
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     todos: list["Todo"] = Relationship(back_populates="owner", cascade_delete=True)
-    invite_code: str   = Field(default_factory=lambda: token_hex(4), unique=True, index=True)
+    invite_code: str = Field(default_factory=lambda: token_hex(4), unique=True, index=True)
     collaborations: list["Collaborator"] = Relationship(back_populates="user")
+
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
+
+class CollaboratorUserDataPublic(SQLModel):
+    id: uuid.UUID
+    email: EmailStr
+    full_name: str
+    invite_code: str
 
 
 class UsersPublic(SQLModel):

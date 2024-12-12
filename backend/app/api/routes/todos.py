@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 from app.crud import get_collaborators_by_todo
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Collaborator, Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message, CollaboratorPublic, CollaboratorUpdate, UserPublic 
+from app.models import Collaborator, Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message, CollaboratorPublic, CollaboratorUpdate, User, UserPublic, CollaboratorUserDataPublic 
 from fastapi import Query
 router = APIRouter(prefix="/todos", tags=["todos"])
 
@@ -19,7 +19,6 @@ def read_todos(
     """
     Retrieve todos.
     """
-    print("helelo")
 
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(Todo)
@@ -82,11 +81,22 @@ def update_todo(
     """
     Update an item.
     """
+    # Lấy thông tin todo
     todo = session.get(Todo, id)
     if not todo:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    # Kiểm tra quyền sửa todo
     if not current_user.is_superuser and (todo.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        # Truy vấn bảng Collaborator để kiểm tra quyền
+        collaborator_exists = session.query(Collaborator).filter(
+            Collaborator.todo_id == todo.id,
+            Collaborator.user_id == current_user.id
+        ).first()
+        if not collaborator_exists:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # Cập nhật todo
     update_dict = todo_in.model_dump(exclude_unset=True)
     todo.sqlmodel_update(update_dict)
     session.add(todo)
@@ -103,17 +113,10 @@ def delete_item(
     Delete a todo.
     """
     todo = session.get(Todo, id)
-    # collaboratorTodo = session.get(Collaborator, id)
     if not todo:
         raise HTTPException(status_code=404, detail="Task not found")
     if not current_user.is_superuser and (todo.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    # if collaboratorTodo:
-    #     session.delete(collaboratorTodo)
-    #     session.commit()
-    # if not collaboratorTodo:
-    #     pass
-
     session.query(Collaborator).filter(Collaborator.todo_id == id).delete()
     session.delete(todo)
     session.commit()
@@ -131,8 +134,10 @@ def invite_collaborator(
 ) -> CollaboratorUpdate:
 
     try:
+        if (todo_in.invite_code == current_user.invite_code):
+            raise HTTPException(status_code=400, detail="You cannot invite yourself")
         collaborator = crud.add_collaborator_by_invite_code(
-            session=session, todo_id=todo_id, invite_code=todo_in.invite_code, is_owner=todo_in.is_owner
+            session=session, todo_id=todo_id, invite_code=todo_in.invite_code
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -141,34 +146,105 @@ def invite_collaborator(
     return collaborator  # Make sure this matches the response model
 
 
-@router.get("/{todo_id}/collaborators", response_model=List[CollaboratorPublic])
+@router.get("/{todo_id}/collaborators", response_model=List[CollaboratorUserDataPublic])
 def get_collaborators(
-    *, session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    todo_id: uuid.UUID
 ) -> Any:
     """
-    Retrieve the list of collaborators for a Todo.
+    Retrieve the list of collaborators for a Todo, including user details.
     """
-    # Kiểm tra quyền truy cập vào Todo
-    if not check_todo_access(session=session, todo_id=todo_id, user_id=current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
-    
-    collaborators = get_collaborators_by_todo(session=session, todo_id=todo_id)
-    return collaborators
+    query = (
+        select(User)
+        .join(Collaborator, Collaborator.user_id == User.id)
+        .where(Collaborator.todo_id == todo_id)
+    )
+    users = session.exec(query).all()
+    results = [
+        CollaboratorUserDataPublic(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            invite_code=user.invite_code
+        )
+        for user in users
+    ]
+    return results
 
-@router.delete("/{todo_id}/collaborators/{user_id}")
+@router.delete("/{todo_id}/collaborators/{user_id}/remove", response_model=Message)
 def remove_collaborator(
     *, session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID, user_id: uuid.UUID
 ) -> Message:
     """
     Remove a collaborator from a Todo.
     """
-    # Kiểm tra quyền truy cập vào Todo
-    if not check_todo_access(session=session, todo_id=todo_id, user_id=current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+    # Query to find the collaborator
+    collaborator_query = select(Collaborator).where(
+        Collaborator.todo_id == todo_id, Collaborator.user_id == user_id
+    )
+
+    # Execute the query
+    collaborator = session.exec(collaborator_query).first()
+
+    # If no collaborator is found, raise a 404 error
+    if not collaborator:
+        raise HTTPException(status_code=404, detail="Collaborator not found")
+
+    # Check if the current user has permission to remove collaborators
+    todo_query = select(Todo).where(Todo.id == todo_id)
+    todo = session.exec(todo_query).first()
+
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    if todo.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    # Remove the collaborator from the database
+    session.delete(collaborator)
+
+    # Commit the changes
+    session.commit()
+
+    return Message(message="Collaborator removed successfully")
+
+
+@router.delete("/{todo_id}/leave_collaborate", response_model=Message)
+def remove_collaborator(
+    *, session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID
+) -> Message:
+    """
+    Remove a collaborator from a Todo.
+    """
+    # Query to find the collaborator
+    collaborator_query = select(Collaborator).where(
+        Collaborator.todo_id == todo_id, Collaborator.user_id == current_user.id
+    )
+
+    # Execute the query
+    collaborator = session.exec(collaborator_query).first()
+
+    # If no collaborator is found, raise a 404 error
+    if not collaborator:
+        raise HTTPException(status_code=404, detail="Collaborator not found")
+
+    # Check if the current user has permission to remove collaborators
+    todo_query = select(Todo).where(Todo.id == todo_id)
+    todo = session.exec(todo_query).first()
+
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
     
-    # Xóa cộng tác viên
-    remove_collaborator(session=session, todo_id=todo_id, user_id=user_id)
-    
+
+    # Remove the collaborator from the database
+    session.delete(collaborator)
+
+    # Commit the changes
+    session.commit()
+
     return Message(message="Collaborator removed successfully")
 
 @router.get("/{todo_id}/access", response_model=Message)
