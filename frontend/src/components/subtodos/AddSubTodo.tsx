@@ -17,64 +17,53 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 
 import {
   type ApiError,
-  type TodoPublic,
-  type TodoUpdate,
-  TodosService,
+  type SubTodoCreate,
+  SubTodosService,
 } from '../../client';
 import useCustomToast from '../../hooks/useCustomToast';
 import { handleError } from '../../utils';
 
-interface EditTodoProps {
-  todo: TodoPublic;
+interface AddSubTodoProps {
   isOpen: boolean;
   onClose: () => void;
+  todoId: string;
 }
 
-const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
+const AddSubTodo = ({ isOpen, onClose, todoId }: AddSubTodoProps) => {
   const queryClient = useQueryClient();
   const showToast = useCustomToast();
   const {
     register,
     handleSubmit,
     reset,
-    formState: { isSubmitting, errors, isDirty },
-  } = useForm<TodoUpdate>({
+    formState: { errors, isSubmitting },
+  } = useForm<SubTodoCreate>({
     mode: 'onBlur',
     criteriaMode: 'all',
-    defaultValues: todo,
+    defaultValues: {
+      title: '',
+      desc: '',
+    },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: TodoUpdate) =>
-      TodosService.updateTodo({ id: todo.id, requestBody: data }),
+    mutationFn: (data: SubTodoCreate) =>
+      SubTodosService.createSubTodo({ requestBody: data, todo_id: todoId }),
     onSuccess: () => {
-      showToast('Success!', 'Task updated successfully.', 'success');
+      showToast('Success!', 'Sub task is created successfully.', 'success');
+      reset();
       onClose();
     },
     onError: (err: ApiError) => {
       handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.setQueryData(['todos'], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map((todo: any) =>
-            todo.id === todo.id ? { ...todo } : todo
-          ),
-        };
-      });
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todo_id'] });
     },
   });
 
-  const onSubmit: SubmitHandler<TodoUpdate> = async (data) => {
-    mutation.mutate(data);
-  };
-
-  const onCancel = () => {
-    reset();
-    onClose();
+  const onSubmit: SubmitHandler<SubTodoCreate> = (data) => {
+    mutation.mutate({ ...data, todo_id: todoId });
   };
 
   return (
@@ -87,16 +76,17 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
       >
         <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>Edit Task</ModalHeader>
+          <ModalHeader>Add Sub Task</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
-            <FormControl isInvalid={!!errors.title}>
+            <FormControl isRequired isInvalid={!!errors.title}>
               <FormLabel htmlFor="title">Title</FormLabel>
               <Input
                 id="title"
                 {...register('title', {
-                  required: 'Title is required',
+                  required: 'Title is required.',
                 })}
+                placeholder="Title"
                 type="text"
               />
               {errors.title && (
@@ -113,16 +103,12 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
               />
             </FormControl>
           </ModalBody>
+
           <ModalFooter gap={3}>
-            <Button
-              variant="primary"
-              type="submit"
-              isLoading={isSubmitting}
-              isDisabled={!isDirty}
-            >
+            <Button variant="primary" type="submit" isLoading={isSubmitting}>
               Save
             </Button>
-            <Button onClick={onCancel}>Cancel</Button>
+            <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -130,4 +116,4 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
   );
 };
 
-export default EditTodos;
+export default AddSubTodo;

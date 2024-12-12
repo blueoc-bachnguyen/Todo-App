@@ -1,74 +1,78 @@
 import {
-  Button,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
   Input,
+  Button,
   Modal,
   ModalBody,
-  ModalCloseButton,
-  ModalContent,
   ModalFooter,
+  ModalContent,
   ModalHeader,
   ModalOverlay,
+  ModalCloseButton,
+  FormLabel,
+  FormControl,
+  FormErrorMessage,
 } from '@chakra-ui/react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type SubmitHandler, useForm } from 'react-hook-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
   type ApiError,
-  type TodoPublic,
-  type TodoUpdate,
-  TodosService,
+  type SubTodoPublic,
+  type SubTodoUpdate,
+  SubTodosService,
 } from '../../client';
-import useCustomToast from '../../hooks/useCustomToast';
 import { handleError } from '../../utils';
+import useCustomToast from '../../hooks/useCustomToast';
 
-interface EditTodoProps {
-  todo: TodoPublic;
+interface EditSubTodoProps {
+  subtodo: SubTodoPublic;
   isOpen: boolean;
   onClose: () => void;
 }
 
-const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
-  const queryClient = useQueryClient();
+const EditSubTodo = ({ subtodo, isOpen, onClose }: EditSubTodoProps) => {
   const showToast = useCustomToast();
+  const queryClient = useQueryClient();
   const {
+    reset,
     register,
     handleSubmit,
-    reset,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<TodoUpdate>({
+  } = useForm<SubTodoUpdate>({
     mode: 'onBlur',
     criteriaMode: 'all',
-    defaultValues: todo,
+    defaultValues: subtodo,
   });
 
   const mutation = useMutation({
-    mutationFn: (data: TodoUpdate) =>
-      TodosService.updateTodo({ id: todo.id, requestBody: data }),
+    mutationFn: (data: SubTodoUpdate) =>
+      SubTodosService.updateSubTodo({
+        id: subtodo.id,
+        todo_id: subtodo.todo_id,
+        requestBody: data,
+      }),
     onSuccess: () => {
-      showToast('Success!', 'Task updated successfully.', 'success');
+      showToast('Success!', 'Sub todo is updated successfully.', 'success');
       onClose();
     },
     onError: (err: ApiError) => {
       handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.setQueryData(['todos'], (oldData: any) => {
+      queryClient.setQueryData(['subtodos'], (oldData: any) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          data: oldData.data.map((todo: any) =>
-            todo.id === todo.id ? { ...todo } : todo
+          data: oldData.data.map((subtodo: any) =>
+            subtodo.id === subtodo.id ? { ...subtodo } : subtodo
           ),
         };
       });
-      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todo_id'] });
     },
   });
 
-  const onSubmit: SubmitHandler<TodoUpdate> = async (data) => {
+  const onSubmit: SubmitHandler<SubTodoUpdate> = async (data) => {
     mutation.mutate(data);
   };
 
@@ -80,14 +84,15 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
   return (
     <>
       <Modal
+        size="md"
+        isCentered
         isOpen={isOpen}
         onClose={onClose}
-        size={{ base: 'sm', md: 'md' }}
-        isCentered
+        closeOnOverlayClick={false}
       >
         <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>Edit Task</ModalHeader>
+          <ModalHeader>Edit {subtodo.title}</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl isInvalid={!!errors.title}>
@@ -130,4 +135,4 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
   );
 };
 
-export default EditTodos;
+export default EditSubTodo;
