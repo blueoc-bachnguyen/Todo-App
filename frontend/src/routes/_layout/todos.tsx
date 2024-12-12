@@ -11,27 +11,29 @@ import {
   Container,
   SkeletonText,
   TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react"
-import { Button } from "../../components/ui/button"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
-import { z } from "zod"
+  ModalBody,
+  ModalHeader,
+  ModalOverlay,
+  ModalContent,
+  ModalCloseButton,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { z } from "zod";
+import { IoIosList } from "react-icons/io";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { TodosService } from "../../client/index.ts"
-import ActionsMenu from "../../components/Common/ActionsMenu.tsx"
-import Navbar from "../../components/Common/Navbar.tsx"
-import AddTodo from "../../components/todos/Addtodos.tsx"
-import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx"
+import { Button } from "../../components/ui/button";
+import Navbar from "../../components/Common/Navbar.tsx";
+import AddTodo from "../../components/todos/Addtodos.tsx";
+import Delete from "../../components/Common/DeleteAlert.tsx";
+import ActionsMenu from "../../components/Common/ActionsMenu.tsx";
+import ActionsMenuForCollaborator from "../../components/Common/ActionsMenuForCollaborator.tsx";
+import EditSubTodo from "../../components/subtodos/EditSubTodo.tsx";
+import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx";
 
-const todosSearchSchema = z.object({
-  page: z.number().catch(1),
-})
+import { SubTodoPublic, TodosService, SubTodosService } from "../../client/index.ts";
 
 export const Route = createFileRoute('/_layout/todos')({
   component: Todos,
@@ -47,16 +49,60 @@ const getTodosQueryOptions = ({ page }: { page: number }) => {
   return {
     queryFn: () =>
       TodosService.readTodos({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
-    queryKey: ["todos", { page }],
+    queryKey: ['todos', { page }],
+  };
+};
+
+const getSubTodosQueryOptions = (todo_id: string) => {
+  return {
+    queryFn: () => SubTodosService.getSubTodoByTodoId({ todo_id }),
+    queryKey: ['subtodos', todo_id],
+    enabled: !!todo_id,
+  };
+};
+
+function getCollaboratedTodosQueryOptions({ page }: { page: number }) {
+  return {
+    queryFn: () =>
+      TodosService.getTodoForCollaborator({
+        skip: (page - 1) * PER_PAGE, limit: PER_PAGE,
+        user_id: ""
+      }),
+    queryKey: ["collaborations", { page }],
   }
 }
 
-function TodosTable() {
-  const queryClient = useQueryClient()
-  const { page } = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
+
+function TodosTable({ searchQuery }: { searchQuery: string }) {
+  const { page } = Route.useSearch();
+  const queryClient = useQueryClient();
+  const [selectedSubTodo, setSelectedSubTodo] = useState<SubTodoPublic | null>(
+    null
+  );
+  const editSubTodoModal = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const [selectedTodo, setSelectedTodo] = useState<any | null>(null);
+  const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
+  const [isDeleteSubTodoModalOpen, setIsDeleteSubTodoModalOpen] =
+    useState(false);
+  const [deleteSubTodoId, setDeleteSubTodoId] = useState<string | null>(null);
+
+  const handleOpenDeleteModal = (subTodoId: string, todoId: string) => {
+    setDeleteSubTodoId(subTodoId);
+    setSelectedTodoId(todoId);
+    setIsDeleteSubTodoModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteSubTodoId(null);
+    setIsDeleteSubTodoModalOpen(false);
+  };
   const setPage = (page: number) =>
-    navigate({ search: (prev: {[key: string]: string}) => ({ ...prev, page }) })
+    navigate({
+      search: (prev: { [key: string]: string }) => ({ ...prev, page }),
+    });
+  
   const {
     data: todos,
     isPending,
@@ -76,10 +122,7 @@ function TodosTable() {
     enabled: !!selectedTodoId,
   });
 
-  const setPage = (page: number) =>
-    navigate({
-      search: (prev: { [key: string]: string }) => ({ ...prev, page }),
-    });
+  
   const hasNextPage = !isPlaceholderData && todos?.data.length === PER_PAGE;
   const hasPreviousPage = page > 1;
 
@@ -534,8 +577,17 @@ function Todos() {
         Todo List Management
       </Heading>
 
-      <Navbar type={"Todo"} addModalAs={AddTodo} />
-      <TodosTable />
+      <Navbar
+        type={'Todo'}
+        addModalAs={AddTodo}
+        onSearch={handleSearch}
+        search={searchQuery}
+      />
+      <TodosTable searchQuery={searchQuery} />
+      <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
+        Collaborated To Do 
+      </Heading>
+      <TodosCollaboratorTable />
     </Container>
   );
 }

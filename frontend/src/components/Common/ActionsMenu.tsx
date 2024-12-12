@@ -17,7 +17,7 @@ import {
   TodosService 
 } from "../../client";
 import EditUser from "../Admin/EditUser";
-import EditTodos from "../todos/EditTodos";
+import EditTodos from "../todos/Edittodos"
 import Delete from "./DeleteAlert";
 import InviteCollaborators from "../todos/AddCollaborator";
 import AddSubTodo from "../subtodos/AddSubTodo";
