@@ -51,6 +51,7 @@ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         raise HTTPException(status_code=404, detail="Sub todo not found")
     return sub_todo
 
+
 @router.post("/", response_model=SubTodoPublic)
 def create_sub_todo(
     *, session: SessionDep, sub_todo_in: SubTodoCreate

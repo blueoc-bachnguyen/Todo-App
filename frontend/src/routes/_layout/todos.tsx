@@ -9,44 +9,46 @@ import {
   Th,
   Thead,
   Tr,
-} from "@chakra-ui/react"
-import { Button } from "../../components/ui/button"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useEffect } from "react"
-import { z } from "zod"
+} from "@chakra-ui/react";
+import { Button } from "../../components/ui/button";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 
-import { TodosService } from "../../client/index.ts"
-import ActionsMenu from "../../components/Common/ActionsMenu.tsx"
-import Navbar from "../../components/Common/Navbar.tsx"
-import AddTodo from "../../components/todos/Addtodos.tsx"
-import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx"
+import { TodosService } from "../../client/index.ts";
+import ActionsMenu from "../../components/Common/ActionsMenu.tsx";
+import Navbar from "../../components/Common/Navbar.tsx";
+import AddTodo from "../../components/todos/Addtodos.tsx";
+import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx";
 
 const todosSearchSchema = z.object({
   page: z.number().catch(1),
-})
+});
 
 export const Route = createFileRoute("/_layout/todos")({
   component: Todos,
   validateSearch: (search) => todosSearchSchema.parse(search),
-})
+});
 
-const PER_PAGE = 5
+const PER_PAGE = 5;
 
 function getTodosQueryOptions({ page }: { page: number }) {
   return {
     queryFn: () =>
       TodosService.readTodos({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
     queryKey: ["todos", { page }],
-  }
+  };
 }
 
-function TodosTable() {
-  const queryClient = useQueryClient()
-  const { page } = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
+function TodosTable({ searchQuery }: { searchQuery: string }) {
+  const queryClient = useQueryClient();
+  const { page } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
   const setPage = (page: number) =>
-    navigate({ search: (prev: {[key: string]: string}) => ({ ...prev, page }) })
+    navigate({
+      search: (prev: { [key: string]: string }) => ({ ...prev, page }),
+    });
   const {
     data: items,
     isPending,
@@ -54,18 +56,21 @@ function TodosTable() {
   } = useQuery({
     ...getTodosQueryOptions({ page }),
     placeholderData: (prevData) => prevData,
-  })
+  });
 
-  const hasNextPage = !isPlaceholderData && items?.data.length === PER_PAGE
-  const hasPreviousPage = page > 1
+  const hasNextPage = !isPlaceholderData && items?.data.length === PER_PAGE;
+  const hasPreviousPage = page > 1;
 
   useEffect(() => {
     if (hasNextPage) {
-      queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }))
+      queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
     }
-  }, [page, queryClient, hasNextPage])
-  
-  const changeStatus = async (todoId: string, newStatus: "pending" | "completed" | "in_progress") => {
+  }, [page, queryClient, hasNextPage]);
+
+  const changeStatus = async (
+    todoId: string,
+    newStatus: "pending" | "completed" | "in_progress"
+  ) => {
     try {
       // Optimistic update
       queryClient.setQueryData(["todos", { page }], (oldData: any) => {
@@ -77,12 +82,12 @@ function TodosTable() {
           ),
         };
       });
-  
+
       // Call API to persist changes
-      await TodosService.updateTodo({ id: todoId, requestBody: { status: newStatus } });
-  
-      // Optionally refresh data after successful update
-      queryClient.invalidateQueries({ queryKey: ["todos"], exact: true, refetchType: "active" });
+      await TodosService.updateTodo({
+        id: todoId,
+        requestBody: { status: newStatus },
+      });
     } catch (error) {
       console.error("Failed to change status", error);
     }
@@ -113,39 +118,65 @@ function TodosTable() {
             </Tbody>
           ) : (
             <Tbody>
-              {items?.data.map((todo) => (
-                <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
-                  <Td>{todo.id}</Td>
-                  <Td isTruncated maxWidth="150px">
-                    {todo.title}
-                  </Td>
-                  <Td
-                    color={!todo.desc ? "ui.dim" : "inherit"}
-                    isTruncated
-                    maxWidth="150px"
-                  >
-                    {todo.desc || "N/A"}
-                  </Td>
-                  <Td>
-                    {todo.status === "in_progress" ? (
-                      <Button size="sm" colorScheme="blue" onClick={() => changeStatus(todo.id, "pending")}>
-                        In Progress
-                      </Button>
-                    ) : todo.status === "completed" ? (
-                      <Button size="sm" colorScheme="green" onClick={() => changeStatus(todo.id, "in_progress")}>
-                        Completed
-                      </Button>
-                    ) : (
-                      <Button size="sm" colorScheme="yellow" onClick={() => changeStatus(todo.id, "completed")}>
-                        Pending
-                      </Button>
-                    )}
-                  </Td>
-                  <Td>
-                    <ActionsMenu type={"Todo"} value={todo} />
-                  </Td>
-                </Tr>
-              ))}
+              {items?.data
+                ?.filter(
+                  (todo) =>
+                    todo.title
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    todo.desc
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                      todo.status
+                        .replace("_", " ")
+                        .toLowerCase()
+                        .includes(searchQuery.toLowerCase())
+                )
+                .map((todo) => (
+                  <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
+                    <Td>{todo.id}</Td>
+                    <Td isTruncated maxWidth="150px">
+                      {todo.title}
+                    </Td>
+                    <Td
+                      color={!todo.desc ? "ui.dim" : "inherit"}
+                      isTruncated
+                      maxWidth="150px"
+                    >
+                      {todo.desc || "N/A"}
+                    </Td>
+                    <Td>
+                      {todo.status === "in_progress" ? (
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() => changeStatus(todo.id, "pending")}
+                        >
+                          In Progress
+                        </Button>
+                      ) : todo.status === "completed" ? (
+                        <Button
+                          size="sm"
+                          colorScheme="green"
+                          onClick={() => changeStatus(todo.id, "in_progress")}
+                        >
+                          Completed
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          colorScheme="yellow"
+                          onClick={() => changeStatus(todo.id, "completed")}
+                        >
+                          Pending
+                        </Button>
+                      )}
+                    </Td>
+                    <Td>
+                      <ActionsMenu type={"Todo"} value={todo} />
+                    </Td>
+                  </Tr>
+                ))}
             </Tbody>
           )}
         </Table>
@@ -157,18 +188,28 @@ function TodosTable() {
         hasPreviousPage={hasPreviousPage}
       />
     </>
-  )
+  );
 }
 
 function Todos() {
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Trạng thái lưu từ khóa tìm kiếm
+
+  const handleSearch = (search: string) => {
+    setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
+  };
+
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
         To Do List Management
       </Heading>
-
-      <Navbar type={"Todo"} addModalAs={AddTodo} />
-      <TodosTable />
+      <Navbar
+        type={"Todo"}
+        addModalAs={AddTodo}
+        onSearch={handleSearch}
+        search={searchQuery}
+      />
+      <TodosTable searchQuery={searchQuery} />
     </Container>
-  )
+  );
 }
