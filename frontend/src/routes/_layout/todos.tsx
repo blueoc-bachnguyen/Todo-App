@@ -61,7 +61,7 @@ const getSubTodosQueryOptions = (todo_id: string) => {
   };
 };
 
-function TodosTable() {
+function TodosTable({ searchQuery }: { searchQuery: string }) {
   const { page } = Route.useSearch();
   const queryClient = useQueryClient();
   const [selectedSubTodo, setSelectedSubTodo] = useState<SubTodoPublic | null>(
@@ -114,6 +114,7 @@ function TodosTable() {
 
   useEffect(() => {
     if (hasNextPage) {
+      queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
       queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
     }
   }, [page, queryClient, hasNextPage]);
@@ -427,14 +428,24 @@ function TodosTable() {
 }
 
 function Todos() {
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Trạng thái lưu từ khóa tìm kiếm
+
+  const handleSearch = (search: string) => {
+    setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
+  };
+
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: 'center', md: 'left' }} pt={12}>
         Todo List Management
       </Heading>
-
-      <Navbar type={'Todo'} addModalAs={AddTodo} />
-      <TodosTable />
+      <Navbar
+        type={"Todo"}
+        addModalAs={AddTodo}
+        onSearch={handleSearch}
+        search={searchQuery}
+      />
+      <TodosTable searchQuery={searchQuery} />
     </Container>
   );
 }

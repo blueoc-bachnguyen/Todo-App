@@ -1,18 +1,18 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message
+from app.models import Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message, SubTodo, SubTodosPublic
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 
 
 @router.get("/", response_model=TodosPublic)
 def read_todos(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100, search: str | None = None
 ) -> Any:
     """
     Retrieve todos.
@@ -29,15 +29,22 @@ def read_todos(
             .select_from(Todo)
             .where(Todo.owner_id == current_user.id)
         )
-        count = session.exec(count_statement).one()
         statement = (
             select(Todo)
             .where(Todo.owner_id == current_user.id)
-            .offset(skip)
-            .limit(limit)
+            .order_by(Todo.created_at.desc())
         )
+        if search:
+            statement = statement.where(Todo.title.contains(search) | Todo.desc.contains(search) | Todo.status.contains(search))
+            count_statement = (
+                select(func.count())
+                .select_from(Todo)
+                .where(Todo.owner_id == current_user.id)
+                .where(Todo.title.contains(search) | Todo.desc.contains(search) | Todo.status.contains(search))
+            )
+        count = session.exec(count_statement).one()
+        statement = statement.offset(skip).limit(limit)
         todos = session.exec(statement).all()
-
     return TodosPublic(data=todos, count=count)
 
 
@@ -107,3 +114,4 @@ def delete_item(
     session.delete(todo)
     session.commit()
     return Message(message="Task deleted successfully")
+

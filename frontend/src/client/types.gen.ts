@@ -20,12 +20,14 @@ export type TodoCreate = {
 };
 
 export type TodoPublic = {
-  title: string;
-  desc?: string | null;
-  id: string;
-  owner_id: string;
-  status: 'pending' | 'completed' | 'in_progress';
-};
+  title: string
+  desc?: string | null
+  id: string
+  owner_id: string
+  status: 'pending' | 'completed' | 'in_progress'
+  created_at: string
+  updated_at: string
+}
 
 export type TodosPublic = {
   data: Array<TodoPublic>;
@@ -131,9 +133,10 @@ export type ValidationError = {
 
 // Todo
 export type TodosReadTodosData = {
-  limit?: number;
-  skip?: number;
-};
+  search?: string
+  limit?: number
+  skip?: number
+}
 
 export type TodosReadTodosResponse = TodosPublic;
 
