@@ -213,8 +213,9 @@ class SubTodo(SubTodoBase, table=True):
     status: str = Field(default="in_progress", max_length=255)
     todo: Todo | None = Relationship(back_populates="subtodos")
 
-class SubTodoCreate(SubTodoBase):
-    todo_id: uuid.UUID
+class SubTodoCreate(SQLModel):
+    title: str = Field(min_length=1, max_length=255)
+    desc: str = Field(max_length=255)
 
 # Properties to receive on item update
 class SubTodoUpdate(SubTodoBase):
@@ -224,6 +225,7 @@ class SubTodoUpdate(SubTodoBase):
     
 class SubTodoPublic(SubTodoBase):
     id: uuid.UUID
+    desc: str | None = Field(default=None, max_length=255)
     todo_id: uuid.UUID
     status: str
 

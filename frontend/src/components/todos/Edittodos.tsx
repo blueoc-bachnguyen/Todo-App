@@ -11,39 +11,39 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-} from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { type SubmitHandler, useForm } from "react-hook-form"
-import { useQuery } from "@tanstack/react-query"
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { type SubmitHandler, useForm } from "react-hook-form";
+
 import {
   type ApiError,
   type TodoPublic,
   type TodoUpdate,
   TodosService,
-  UserPublic,
-} from "../../client"
-import useCustomToast from "../../hooks/useCustomToast"
-import { handleError } from "../../utils"
+  type UserPublic,
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { handleError } from "../../utils";
 
 interface EditTodoProps {
-  todo: TodoPublic
-  isOpen: boolean
-  onClose: () => void
+  todo: TodoPublic;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
-  const queryClient = useQueryClient()
-  const showToast = useCustomToast()
+const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
+  const queryClient = useQueryClient();
+  const showToast = useCustomToast();
   const {
     register,
     handleSubmit,
     reset,
     formState: { isSubmitting, errors, isDirty },
   } = useForm<TodoUpdate>({
-    mode: "onBlur",
-    criteriaMode: "all",
+    mode: 'onBlur',
+    criteriaMode: 'all',
     defaultValues: todo,
-  })
+  });
 
 
   function getCollaboratorsQueryOptions(todoId: string) {
@@ -62,14 +62,14 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
     mutationFn: (data: TodoUpdate) =>
       TodosService.updateTodo({ id: todo.id, requestBody: data }),
     onSuccess: () => {
-      showToast("Success!", "Task updated successfully.", "success")
-      onClose()
+      showToast('Success!', 'Task updated successfully.', 'success');
+      onClose();
     },
     onError: (err: ApiError) => {
-      handleError(err, showToast)
+      handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.setQueryData(["todos"], (oldData: any) => {
+      queryClient.setQueryData(['todos'], (oldData: any) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
@@ -78,18 +78,18 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
           ),
         };
       });
-      queryClient.invalidateQueries({ queryKey: ["todos"] })
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
     },
-  })
+  });
 
   const onSubmit: SubmitHandler<TodoUpdate> = async (data) => {
-    mutation.mutate(data)
-  }
+    mutation.mutate(data);
+  };
 
   const onCancel = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   function getRemoveCollaboratorMutationOptions(todoId: string, queryClient: any, showToast: any) {
     return {
@@ -121,7 +121,7 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size={{ base: "sm", md: "md" }}
+        size={{ base: 'sm', md: 'md' }}
         isCentered
       >
         <ModalOverlay />
@@ -133,8 +133,8 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
               <FormLabel htmlFor="title">Title</FormLabel>
               <Input
                 id="title"
-                {...register("title", {
-                  required: "Title is required",
+                {...register('title', {
+                  required: 'Title is required',
                 })}
                 type="text"
               />
@@ -146,7 +146,7 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
               <FormLabel htmlFor="desc">Description</FormLabel>
               <Input
                 id="desc"
-                {...register("desc")}
+                {...register('desc')}
                 placeholder="Description"
                 type="text"
               />
@@ -198,7 +198,7 @@ const Edittodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
         </ModalContent>
       </Modal>
     </>
-  )
-}
+  );
+};
 
-export default Edittodos
+export default EditTodos;

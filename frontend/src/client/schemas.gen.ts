@@ -161,22 +161,133 @@ export const TodoUpdateSchema = {
 
 export const TodosPublicSchema = {
   properties: {
-    data: {
-      items: {
-        $ref: "#/components/schemas/TodoPublic",
-      },
-      type: "array",
-      title: "Data",
+    title: {
+      type: 'string',
+      maxLength: 255,
+      minLength: 1,
+      title: 'Title',
     },
-    count: {
-      type: "integer",
-      title: "Count",
+    desc: {
+      type: ['string', 'null'],
+      maxLength: 255,
+      title: 'Description',
+    },
+    id: {
+      type: 'string',
+      format: 'uuid',
+      title: 'Id',
+    },
+    owner_id: {
+      type: 'string',
+      format: 'uuid',
+      title: 'Owner Id',
+    },
+    status: {
+      type: 'string',
+      enum: ['pending', 'completed', 'in_progress'],
+      default: 'in_progress',
+      title: 'Status',
+    },
+  },
+  type: 'object',
+  required: ['title', 'id', 'owner_id'],
+  title: 'SubTodoPublic',
+} as const;
+
+export const SubTodoCreateSchema = {
+  properties: {
+    title: {
+      type: "string",
+      maxLength: 255,
+      minLength: 1,
+      title: "Title",
+    },
+    desc: {
+      type: ["string", "null"],
+      maxLength: 255,
+      title: "Description",
+    },
+    status: {
+      type: "string",
+      enum: ["pending", "completed", "in_progress"],
+      default: "in_progress",
+      title: "Status",
+    },
+    todo_id: {
+      type: "string",
+      format: "uuid",
+      title: "Todo Id",
     },
   },
   type: "object",
-  required: ["data", "count"],
-  title: "TodosPublic",
-} as const
+  required: ["title", "todo_id"],
+  title: "SubTodoCreate",
+}
+
+export const SubTodoPublicSchema = {
+  properties: {
+    title: {
+      type: 'string',
+      maxLength: 255,
+      minLength: 1,
+      title: 'Title',
+    },
+    desc: {
+      type: ['string', 'null'],
+      maxLength: 255,
+      title: 'Description',
+    },
+    id: {
+      type: 'string',
+      format: 'uuid',
+      title: 'Id',
+    },
+    todo_id: {
+      type: 'string',
+      format: 'uuid',
+      title: 'Todo Id',
+    },
+    status: {
+      type: 'string',
+      enum: ['pending', 'completed', 'in_progress'],
+      default: 'in_progress',
+      title: 'Status',
+    },
+  },
+  type: 'object',
+  required: ['title', 'id', 'todo_id'],
+  title: 'SubTodoPublic',
+};
+
+export const SubTodoUpdateSchema = {
+  properties: {
+    title: {
+      anyOf: [
+        {
+          type: 'string',
+          maxLength: 255,
+          minLength: 1,
+        },
+        {
+          type: 'null',
+        },
+      ],
+      title: 'Title',
+    },
+    desc: {
+      type: ['string', 'null'],
+      maxLength: 255,
+      title: 'Description',
+    },
+    status: {
+      type: ['string', 'null'],
+      enum: ['pending', 'completed', 'in_progress'],
+      title: 'Status',
+    },
+  },
+  type: 'object',
+  title: 'SubTodoUpdate',
+};
 
 export const MessageSchema = {
   properties: {
