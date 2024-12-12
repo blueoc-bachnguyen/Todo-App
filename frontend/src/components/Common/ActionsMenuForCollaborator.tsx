@@ -7,29 +7,29 @@ import {
   useDisclosure,
 } from "@chakra-ui/react"
 import {  BsThreeDotsVertical } from "react-icons/bs"
-import {FiEdit, FiPlus, FiTrash, FiUsers } from "react-icons/fi"
+import {FiEdit, FiLogOut, FiPlus, FiTrash, FiUsers } from "react-icons/fi"
 
-import { type TodoPublic, type UserPublic, type CollaboratorInformation, TodosService } from "../../client"
+import type { TodoPublic, UserPublic } from "../../client"
 import EditUser from "../Admin/EditUser"
 import Edittodos from "../todos/Edittodos"
-import Delete from "./DeleteAlert"
+// import Delete from "./DeleteAlert"
 import InviteCollaborators from "../todos/AddCollaborator"
-import { useQuery } from "@tanstack/react-query"
+import Delete from "../todos/QuitCollaborate"
 
-interface ActionsMenuProps {
+interface ActionsMenuForCollaboratorProps {
   type: string
   value: TodoPublic | UserPublic
   disabled?: boolean
 }
 
-const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
+const ActionsMenuForCollaborator = ({ type, value, disabled }: ActionsMenuForCollaboratorProps) => {
   const editUserModal = useDisclosure()
-  const deleteModal = useDisclosure()
+  const QuitCollaborate = useDisclosure()
   const InviteCollaboratorsModal = useDisclosure()
   const addSubtask = () => {
     console.log("add subtask")
   }
-
+  
   return (
     <>
       <Menu>
@@ -48,25 +48,17 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
           </MenuItem>
 
           <MenuItem
-            onClick={InviteCollaboratorsModal.onOpen}
-            icon={<FiUsers fontSize="16px" />}
-            color="unstyled"
-          >
-            Add collaborators
-          </MenuItem>
-
-          <MenuItem
             onClick={addSubtask}
             icon={<FiPlus fontSize="16px" />}
           >
             Add Subtask
           </MenuItem>
           <MenuItem
-            onClick={deleteModal.onOpen}
-            icon={<FiTrash fontSize="16px" />}
+            onClick={QuitCollaborate.onOpen}
+            icon={<FiLogOut fontSize="16px" />}
             color="ui.danger"
           >
-            Delete {type}
+            Quit {type}
           </MenuItem>
         </MenuList>
         {type === "User" ? (
@@ -85,8 +77,8 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
         <Delete
           type={type}
           id={value.id}
-          isOpen={deleteModal.isOpen}
-          onClose={deleteModal.onClose}
+          isOpen={QuitCollaborate.isOpen}
+          onClose={QuitCollaborate.onClose}
         />
       </Menu>
       
@@ -98,4 +90,4 @@ const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
   )
 }
 
-export default ActionsMenu
+export default ActionsMenuForCollaborator

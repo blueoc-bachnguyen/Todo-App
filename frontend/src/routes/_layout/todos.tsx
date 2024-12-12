@@ -18,6 +18,7 @@ import { z } from "zod"
 
 import { TodosService } from "../../client/index.ts"
 import ActionsMenu from "../../components/Common/ActionsMenu.tsx"
+import ActionsMenuForCollaborator from "../../components/Common/ActionsMenuForCollaborator.tsx"
 import Navbar from "../../components/Common/Navbar.tsx"
 import AddTodo from "../../components/todos/Addtodos.tsx"
 import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx"
@@ -44,7 +45,10 @@ function getTodosQueryOptions({ page }: { page: number }) {
 function getCollaboratedTodosQueryOptions({ page }: { page: number }) {
   return {
     queryFn: () =>
-      TodosService.getTodoForCollaborator({ skip: (page - 1) * PER_PAGE, limit: PER_PAGE }),
+      TodosService.getTodoForCollaborator({
+        skip: (page - 1) * PER_PAGE, limit: PER_PAGE,
+        user_id: ""
+      }),
     queryKey: ["collaborations", { page }],
   }
 }
@@ -61,6 +65,7 @@ function TodosTable() {
     isPlaceholderData,
   } = useQuery({
     ...getTodosQueryOptions({ page }),
+    
     placeholderData: (prevData) => prevData,
   })
 
@@ -269,7 +274,7 @@ function TodosCollaboratorTable() {
                     )}
                   </Td>
                   <Td>
-                    <ActionsMenu type={"Todo"} value={todo} />
+                    <ActionsMenuForCollaborator type={"Todo"} value={todo} />
                   </Td>
                 </Tr>
               ))}

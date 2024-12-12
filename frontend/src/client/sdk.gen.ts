@@ -47,6 +47,7 @@ import type {
   TodosAddCollaboratorResponse,
   TodosReadCollaboratorTodosData,
   TodosReadCollaboratorTodosResponse,
+  CollaboratorInformation,
   Message
 } from "./types.gen"
 
@@ -114,7 +115,7 @@ public static removeCollaboratorFromTodo(
 ): CancelablePromise<TodosAddCollaboratorResponse> {
   return __request(OpenAPI, {
     method: "DELETE",
-    url: "/api/v1/todos/{todo_id}/collaborators/{user_id}",
+    url: "/api/v1/todos/{todo_id}/collaborators/{user_id}/remove",
     path: {
       todo_id: data.todo_id,
       user_id: data.collaborator_user_id,
@@ -126,6 +127,35 @@ public static removeCollaboratorFromTodo(
 }
 
 
+public static leaveFromCollaboratorTodo(
+  data: { todo_id: string },
+): CancelablePromise<TodosAddCollaboratorResponse> {
+  return __request(OpenAPI, {
+    method: "DELETE",
+    url: "/api/v1/todos/{todo_id}/leave_collaborate",
+    path: {
+      todo_id: data.todo_id,
+    },
+    errors: {
+      422: "Validation Error",
+    }
+})
+}
+
+public static ListCollaboratorsFromTodo(
+  data: { todo_id: string },
+): CancelablePromise<CollaboratorInformation[]> {
+  return __request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/todos/{todo_id}/collaborators",
+    path: {
+      todo_id: data.todo_id,
+    },
+    errors: {
+      422: "Validation Error",
+    }
+})
+}
 
 
 /**

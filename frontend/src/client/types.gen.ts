@@ -73,6 +73,13 @@ export type UserPublic = {
   invite_code?: string
 }
 
+export type CollaboratorInformation = {
+  id: string
+  email: string
+  full_name?: string | null
+  invite_code?: string
+}
+
 export type UserRegister = {
   email: string
   password: string
@@ -237,7 +244,7 @@ export interface TodosAddCollaboratorData {
 }
 
 export interface TodosAddCollaboratorResponse {
-  message: string; // Thông điệp xác nhận thành công
+  message: string;
 }
 
 export type CollaboratorLeaveTodoData = {
