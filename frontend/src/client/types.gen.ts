@@ -24,6 +24,8 @@ export type TodoPublic = {
   id: string
   owner_id: string
   status: 'pending' | 'completed' | 'in_progress'
+  created_at: string
+  updated_at: string
 }
 
 export type TodosPublic = {
@@ -103,6 +105,7 @@ export type ValidationError = {
 }
 
 export type TodosReadTodosData = {
+  search?: string
   limit?: number
   skip?: number
 }

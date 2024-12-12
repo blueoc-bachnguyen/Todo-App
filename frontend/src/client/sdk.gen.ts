@@ -63,6 +63,7 @@ export class TodosService {
       method: "GET",
       url: "/api/v1/todos/",
       query: {
+        search: data.search,
         skip: data.skip,
         limit: data.limit,
       },
