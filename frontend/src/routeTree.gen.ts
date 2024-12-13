@@ -18,6 +18,7 @@ import { Route as LoginImport } from './routes/login'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutTodosImport } from './routes/_layout/todos'
+import { Route as LayoutSubtodosImport } from './routes/_layout/subtodos'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
@@ -55,6 +56,11 @@ const LayoutIndexRoute = LayoutIndexImport.update({
 
 const LayoutTodosRoute = LayoutTodosImport.update({
   path: '/todos',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
+const LayoutSubtodosRoute = LayoutSubtodosImport.update({
+  path: '/subtodos',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -121,6 +127,7 @@ export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
     LayoutSettingsRoute,
+    LayoutSubtodosRoute,
     LayoutTodosRoute,
     LayoutIndexRoute,
   ]),
