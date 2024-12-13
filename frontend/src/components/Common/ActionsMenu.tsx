@@ -11,7 +11,7 @@ import { FiEdit, FiPlus, FiTrash } from 'react-icons/fi';
 
 import Delete from './DeleteAlert';
 import EditUser from '../Admin/EditUser';
-import EditTodos from '../todos/EditTodos';
+import EditTodos from '../todos/EditTodo';
 import AddSubTodo from '../subtodos/AddSubTodo';
 import type { SubTodoPublic, TodoPublic, UserPublic } from '../../client';
 

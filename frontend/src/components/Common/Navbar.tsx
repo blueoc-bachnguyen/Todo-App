@@ -1,6 +1,6 @@
 import { Flex, Button, Icon, useDisclosure } from "@chakra-ui/react";
 import { FaPlus } from "react-icons/fa";
-import SearchComponent from "../todos/SearchTodos";
+import SearchComponent from "../todos/SearchTodo";
 
 interface NavbarProps {
   type: string;

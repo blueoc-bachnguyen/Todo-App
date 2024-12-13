@@ -26,7 +26,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Common/Navbar.tsx';
-import AddTodo from '../../components/todos/Addtodos.tsx';
+import AddTodo from '../../components/todos/AddTodo.tsx';
 import Delete from '../../components/Common/DeleteAlert.tsx';
 import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
 import EditSubTodo from '../../components/subtodos/EditSubTodo.tsx';
