@@ -26,10 +26,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Common/Navbar.tsx';
-import AddTodo from '../../components/todos/AddTodo.tsx';
+import AddTodo from '../../components/Todo/AddTodo.tsx';
 import Delete from '../../components/Common/DeleteAlert.tsx';
 import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
-import EditSubTodo from '../../components/subtodos/EditSubTodo.tsx';
+import EditSubTodo from '../../components/SubTodo/EditSubTodo.tsx';
 import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
 
 import { SubTodoPublic } from '../../client/index.ts';
@@ -432,16 +432,16 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
 }
 
 function Todos() {
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Trạng thái lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleSearch = (search: string) => {
-    setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
+    setSearchQuery(search); 
   };
 
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: 'center', md: 'left' }} pt={12}>
-        Todo List Management
+        Todo Management
       </Heading>
       <Navbar
         type={'Todo'}
