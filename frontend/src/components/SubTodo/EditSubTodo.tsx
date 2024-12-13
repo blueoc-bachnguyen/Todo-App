@@ -59,16 +59,7 @@ const EditSubTodo = ({ subtodo, isOpen, onClose }: EditSubTodoProps) => {
       handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.setQueryData(['subtodos'], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map((subtodo: any) =>
-            subtodo.id === subtodo.id ? { ...subtodo } : subtodo
-          ),
-        };
-      });
-      queryClient.invalidateQueries({ queryKey: ['todo_id'] });
+      queryClient.invalidateQueries({ queryKey: ['subtodos'] });
     },
   });
 

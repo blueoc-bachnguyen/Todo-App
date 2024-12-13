@@ -58,7 +58,7 @@ const AddSubTodo = ({ isOpen, onClose, todoId }: AddSubTodoProps) => {
       handleError(err, showToast);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['todo_id'] });
+      queryClient.invalidateQueries({ queryKey: ['subtodos'] });
     },
   });
 

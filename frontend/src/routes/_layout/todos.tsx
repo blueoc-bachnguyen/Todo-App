@@ -80,11 +80,13 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
     setDeleteSubTodoId(subTodoId);
     setSelectedTodoId(todoId);
     setIsDeleteSubTodoModalOpen(true);
+    refetch();
   };
 
   const handleCloseDeleteModal = () => {
     setDeleteSubTodoId(null);
     setIsDeleteSubTodoModalOpen(false);
+    refetch();
   };
 
   const {
