@@ -76,7 +76,7 @@ const AddSubTodo = ({ isOpen, onClose, todoId }: AddSubTodoProps) => {
       >
         <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>
-          <ModalHeader>Add Sub Todo</ModalHeader>
+          <ModalHeader>Add Sub Task</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl isRequired isInvalid={!!errors.title}>
