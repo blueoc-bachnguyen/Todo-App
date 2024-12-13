@@ -1,12 +1,12 @@
-import { Flex, Button, Icon, useDisclosure } from "@chakra-ui/react";
-import { FaPlus } from "react-icons/fa";
-import SearchComponent from "../todos/SearchTodo";
+import { Flex, Button, Icon, useDisclosure } from '@chakra-ui/react';
+import { FaPlus } from 'react-icons/fa';
+import SearchComponent from '../Todo/SearchTodo';
 
 interface NavbarProps {
   type: string;
   addModalAs: React.ComponentType | React.ElementType;
   onSearch: (search: string) => void;
-  search: string; 
+  search: string;
 }
 
 const Navbar = ({ addModalAs, onSearch, search }: NavbarProps) => {
@@ -14,15 +14,21 @@ const Navbar = ({ addModalAs, onSearch, search }: NavbarProps) => {
   const AddModal = addModalAs;
 
   return (
-    <Flex py={5} gap={4} align="center" flexWrap="wrap" margin="20px 0px 10px 0px">
+    <Flex
+      py={5}
+      gap={4}
+      align="center"
+      flexWrap="wrap"
+      margin="20px 0px 10px 0px"
+    >
       {/* Button to open Add Todo modal */}
       <Button
         variant="primary"
         gap={1}
-        fontSize={{ base: "sm", md: "inherit" }}
+        fontSize={{ base: 'sm', md: 'inherit' }}
         onClick={addModal.onOpen}
       >
-        <Icon as={FaPlus} /> Add Task
+        <Icon as={FaPlus} /> Add Todo
       </Button>
       <AddModal isOpen={addModal.isOpen} onClose={addModal.onClose} />
 

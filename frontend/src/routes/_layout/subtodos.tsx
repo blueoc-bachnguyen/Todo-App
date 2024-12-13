@@ -19,7 +19,7 @@ import { z } from 'zod';
 import { SubTodosService } from '../../client/index.ts';
 // import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
 import Navbar from '../../components/Common/Navbar.tsx';
-import AddSubItem from '../../components/subtodos/AddSubTodo.tsx';
+import AddSubItem from '../../components/SubTodo/AddSubTodo.tsx';
 import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
 
 const subtodosSearchSchema = z.object({
