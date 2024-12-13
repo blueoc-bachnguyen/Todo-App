@@ -153,7 +153,7 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
             </FormControl>
             
             <FormControl mt={6}>
-            <FormLabel>Collaborators</FormLabel>
+            
             <FormControl mt={6}>
             <FormLabel>Collaborators</FormLabel>
             {isCollaboratorsLoading ? (

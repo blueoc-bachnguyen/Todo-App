@@ -12,8 +12,8 @@ router = APIRouter(prefix="", tags=["subtodos"])
 @router.get("/todos/{todo_id}/subtodos", response_model=SubTodosPublic)
 def read_subtodo(session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID) -> Any:
     todo = session.get(Todo, todo_id)
-    if not current_user.is_superuser and (todo.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+    # if not current_user.is_superuser and (todo.owner_id != current_user.id):
+    #     raise HTTPException(status_code=400, detail="Not enough permissions")
     statement = select(SubTodo).where(SubTodo.todo_id == todo_id)
     subtodos = session.exec(statement).all()
     if not subtodos:

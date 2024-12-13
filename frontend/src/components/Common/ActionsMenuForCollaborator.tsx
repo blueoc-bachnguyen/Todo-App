@@ -5,16 +5,23 @@ import {
   MenuItem,
   MenuList,
   useDisclosure,
-} from "@chakra-ui/react"
-import {  BsThreeDotsVertical } from "react-icons/bs"
-import {FiEdit, FiLogOut, FiPlus, FiTrash, FiUsers } from "react-icons/fi"
+} from "@chakra-ui/react";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { FiEdit, FiLogOut, FiPlus, FiTrash, FiUsers } from "react-icons/fi";
 
-import type { TodoPublic, UserPublic } from "../../client"
-import EditUser from "../Admin/EditUser"
-import Edittodos from "../todos/Edittodos"
-// import Delete from "./DeleteAlert"
-import InviteCollaborators from "../todos/AddCollaborator"
-import Delete from "../todos/QuitCollaborate"
+import { 
+  type TodoPublic, 
+  type UserPublic, 
+  type CollaboratorInformation, 
+  type SubTodoPublic, 
+  TodosService 
+} from "../../client";
+import EditUser from "../Admin/EditUser";
+import EditTodos from "../todos/Edittodos"
+import Delete from "./DeleteAlert";
+import InviteCollaborators from "../todos/AddCollaborator";
+import AddSubTodo from "../subtodos/AddSubTodo";
+import { useQuery } from "@tanstack/react-query";
 
 interface ActionsMenuForCollaboratorProps {
   type: string
@@ -26,9 +33,12 @@ const ActionsMenuForCollaborator = ({ type, value, disabled }: ActionsMenuForCol
   const editUserModal = useDisclosure()
   const QuitCollaborate = useDisclosure()
   const InviteCollaboratorsModal = useDisclosure()
-  const addSubtask = () => {
-    console.log("add subtask")
-  }
+  const addSubTaskModal = useDisclosure();
+const isTodoPublic = (
+    value: TodoPublic | UserPublic | SubTodoPublic
+  ): value is TodoPublic => {
+    return (value as TodoPublic).title !== undefined;
+  };
   
   return (
     <>
@@ -47,12 +57,21 @@ const ActionsMenuForCollaborator = ({ type, value, disabled }: ActionsMenuForCol
             Edit {type}
           </MenuItem>
 
-          <MenuItem
-            onClick={addSubtask}
-            icon={<FiPlus fontSize="16px" />}
-          >
-            Add Subtask
-          </MenuItem>
+          {isTodoPublic(value) && (
+            <>
+              <MenuItem
+                onClick={addSubTaskModal.onOpen}
+                icon={<FiPlus fontSize="16px" />}
+              >
+                Add SubTodo
+                <AddSubTodo
+                  isOpen={addSubTaskModal.isOpen}
+                  onClose={addSubTaskModal.onClose}
+                  todoId={value.id}
+                />
+              </MenuItem>
+            </>
+          )}
           <MenuItem
             onClick={QuitCollaborate.onOpen}
             icon={<FiLogOut fontSize="16px" />}
@@ -68,7 +87,7 @@ const ActionsMenuForCollaborator = ({ type, value, disabled }: ActionsMenuForCol
             onClose={editUserModal.onClose}
           />
         ) : (
-          <Edittodos
+          <EditTodos
             todo={value as TodoPublic}
             isOpen={editUserModal.isOpen}
             onClose={editUserModal.onClose}

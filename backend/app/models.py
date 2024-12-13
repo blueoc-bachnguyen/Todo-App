@@ -87,6 +87,7 @@ class User(UserBase, table=True):
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
+    invite_code: str
 
 class CollaboratorUserDataPublic(SQLModel):
     id: uuid.UUID

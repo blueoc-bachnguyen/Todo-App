@@ -9,7 +9,7 @@ const items = [
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiBriefcase, title: "Task", path: "/todos" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
-  { icon: FiShare2, title: "Shared Task", path: "/share" },
+  { icon: FiShare2, title: "Shared Task", path: "/invitionConfirm" },
 ];
 
 interface SidebarItemsProps {
