@@ -26,10 +26,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { Button } from '../../components/ui/button';
 import Navbar from '../../components/Common/Navbar.tsx';
-import AddTodo from '../../components/todos/Addtodos.tsx';
+import AddTodo from '../../components/Todo/AddTodo.tsx';
 import Delete from '../../components/Common/DeleteAlert.tsx';
 import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
-import EditSubTodo from '../../components/subtodos/EditSubTodo.tsx';
+import EditSubTodo from '../../components/SubTodo/EditSubTodo.tsx';
 import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
 
 import { SubTodoPublic } from '../../client/index.ts';
@@ -59,7 +59,7 @@ const getTodosQueryOptions = ({ page }: { page: number }) => {
 const getSubTodosQueryOptions = (todo_id: string) => {
   return {
     queryFn: () => SubTodosService.getSubTodoByTodoId({ todo_id }),
-    queryKey: ['subtodos', todo_id],
+    queryKey: ['collaborations', todo_id],
     enabled: !!todo_id,
   };
 };
@@ -97,7 +97,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
   const ConfirmCollaborateTodo = async (
     subTodoId: string,
     todoId: string,
-    newStatus: 'pending' | 'ACCEPTED' | 'REJECTED'
+    newStatus: 'pending' | 'accepted' | 'rejected'
   ) => {
     try {
       queryClient.setQueryData(['collaborations'], (oldData: any) => {
@@ -136,8 +136,6 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
               <Th>Title</Th>
               <Th>Description</Th>
               <Th>Status</Th>
-              {/* <Th>Actions</Th>
-              <Th>SubTodos</Th> */}
             </Tr>
           </Thead>
           {isPending ? (
@@ -179,17 +177,16 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                     >
                       {todo.desc || 'N/A'}
                     </Td>
-                    <Td>{todo.status}</Td>
                     <Td>
                       <Button
                         size="sm"
-                        onClick={() => ConfirmCollaborateTodo('', todo.id, 'ACCEPTED')}
+                        onClick={() => ConfirmCollaborateTodo('', todo.id, 'accepted')}
                       >
                         Accept
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => ConfirmCollaborateTodo('', todo.id, 'REJECTED')}
+                        onClick={() => ConfirmCollaborateTodo('', todo.id, 'rejected')}
                       >
                         Reject
                       </Button>

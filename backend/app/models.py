@@ -15,13 +15,11 @@ class UserBase(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
 
 # Định nghĩa Enum cho trạng thái
-class CollaborationStatus(str, Enum):
-    PENDING = "pending"
-    ACCEPT = "accept"
-    REJECT = "reject"
+
 class CollaboratorBase(SQLModel):
-    status: CollaborationStatus = Field(default=CollaborationStatus.PENDING)
+    status: str = Field(default="pending", max_length=255)
     created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
+
 class Collaborator(CollaboratorBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     todo_id: uuid.UUID = Field(

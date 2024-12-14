@@ -37,7 +37,13 @@ export type TodosPublic = {
 export type TodoUpdate = {
   title?: string | null;
   desc?: string | null;
-  status?: 'pending' | 'ACCEPTED' | 'REJECTED' | null;
+  status?: 'pending' | 'completed' | 'in_progress' | null;
+};
+
+export type CollaboratorTodoUpdate = {
+  title?: string | null;
+  desc?: string | null;
+  status?: 'pending' | 'accepted' | 'rejected' | null;
 };
 
 // SubTodo
@@ -158,7 +164,7 @@ export type ConfirmCollaborateTodosData = {
   limit?: number
   skip?: number
   todo_id: string
-  requestBody: TodoUpdate;
+  requestBody: CollaboratorTodoUpdate;
 }
 
 export type ConfirmCollaborateTodosResponse = Message

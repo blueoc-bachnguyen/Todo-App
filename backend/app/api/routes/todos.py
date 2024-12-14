@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Any, List
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
+from sqlalchemy import and_
 
 from app import crud
 from app.crud import get_collaborators_by_todo
@@ -222,7 +223,6 @@ def remove_collaborator(
 
     return Message(message="Collaborator removed successfully")
 
-
 @router.delete("/{todo_id}/leave_collaborate", response_model=Message)
 def remove_collaborator(
     *, session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID
@@ -289,18 +289,23 @@ def get_collaborated_todos(
         count_statement = (
         select(func.count())
         .select_from(Collaborator)
-        .where(Collaborator.user_id == current_user.id)
+        .where(Collaborator.user_id == current_user.id and Collaborator.status == "accepted")
     )
     count = session.exec(count_statement).one()
 
     # Lấy danh sách todos mà user đang cộng tác
     statement = (
-        select(Todo)
-        .join(Collaborator, Todo.id == Collaborator.todo_id)
-        .where(Collaborator.user_id == current_user.id)
-        .offset(skip)
-        .limit(limit)
+    select(Todo)
+    .join(Collaborator, Todo.id == Collaborator.todo_id)
+    .where(
+        and_(
+            Collaborator.user_id == current_user.id,
+            Collaborator.status == "accepted"
+        )
     )
+    .offset(skip)
+    .limit(limit)
+)
     todos = session.exec(statement).all()
 
     return TodosPublic(data=todos, count=count)
@@ -315,16 +320,13 @@ def get_collaborated_todos(
     """
     if current_user.is_superuser:
         # Count all pending collaborations
-        count_statement = select(func.count()).select_from(Collaborator).where(
-            Collaborator.status == "pending"
-        )
+        count_statement = select(func.count()).select_from(Collaborator)
         count = session.exec(count_statement).one()
 
         # Retrieve all pending collaborations
         statement = (
             select(Todo)
             .join(Collaborator, Todo.id == Collaborator.todo_id)
-            .where(Collaborator.status == "pending")
             .offset(skip)
             .limit(limit)
         )
@@ -335,8 +337,7 @@ def get_collaborated_todos(
             select(func.count())
             .select_from(Collaborator)
             .where(
-                Collaborator.user_id == current_user.id,
-                Collaborator.status == "pending",
+                Collaborator.user_id == current_user.id
             )
         )
         count = session.exec(count_statement).one()
@@ -346,8 +347,7 @@ def get_collaborated_todos(
             select(Todo)
             .join(Collaborator, Todo.id == Collaborator.todo_id)
             .where(
-                Collaborator.user_id == current_user.id,
-                Collaborator.status == "pending",
+                Collaborator.user_id == current_user.id
             )
             .offset(skip)
             .limit(limit)
@@ -368,29 +368,42 @@ def confirm_collaboration(
     Update the status of a todo and the associated collaborator status.
     """
     # Retrieve collaborator record
-    collaborator = session.get(Collaborator, id)
-    if not collaborator:
+    collaborator_query = select(Collaborator).where(Collaborator.todo_id == id)
+    collaborator_result = session.execute(collaborator_query).scalars().first()
+    if not collaborator_result:
         raise HTTPException(status_code=404, detail="Collaboration not found")
 
+    collaborator = collaborator_result
+
     # Check permission to update the collaborator
-    if not current_user.is_superuser and (collaborator.user_id != current_user.id):
+    if not current_user.is_superuser and collaborator.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Retrieve the associated todo
-    todo = session.get(Todo, collaborator.todo_id)
+    todo = session.get(Todo, id)
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
     # Update the todo
-    update_dict = todo_in.model_dump(exclude_unset=True)
-    for key, value in update_dict.items():
+    update_data = todo_in.dict(exclude_unset=True)  # Adjust based on Pydantic version
+    for key, value in update_data.items():
         setattr(todo, key, value)
 
-    # Update the collaborator status to 'accept'
-    collaborator.status = "accept"
+    #if status is rejected, delete the collaborator
+    if todo_in.status == "rejected":
+        session.delete(collaborator)
+        session.commit()
+        return todo
+
+
+
+    collaborator.status = todo_in.status
     session.add(collaborator)
 
+    # Save changes
     session.add(todo)
     session.commit()
+
+    # Refresh and return updated todo
     session.refresh(todo)
     return todo

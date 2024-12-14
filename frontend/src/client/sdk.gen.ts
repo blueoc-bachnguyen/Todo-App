@@ -238,6 +238,8 @@ public static ConfirmCollaborateTodo(
       skip: data.skip,
       limit: data.limit
     },
+
+    body: data.requestBody,
     errors: {
       400: "Validation Error",
     },
