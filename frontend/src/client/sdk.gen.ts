@@ -58,7 +58,9 @@ import type {
   TodosReadCollaboratorTodosData,
   TodosReadCollaboratorTodosResponse,
   CollaboratorInformation,
-  Message
+  Message,
+  ConfirmCollaborateTodosData,
+  ConfirmCollaborateTodosResponse
 } from "./types.gen";
 
 // Todo
@@ -198,6 +200,40 @@ public static getTodoForCollaborator(
   return __request(OpenAPI, {
     method: "GET",
     url: "/api/v1/todos/collaborated",
+    query: { 
+      skip: data.skip,
+      limit: data.limit
+    },
+    errors: {
+      400: "Validation Error",
+    },
+  })
+}
+
+public static getPendingTodoForCollaborator(
+  data: TodosReadCollaboratorTodosData 
+): CancelablePromise<TodosReadCollaboratorTodosResponse> {
+  console.log(data)
+  return __request(OpenAPI, {
+    method: "GET",
+    url: "/api/v1/todos/pending-collaborated",
+    query: { 
+      skip: data.skip,
+      limit: data.limit
+    },
+    errors: {
+      400: "Validation Error",
+    },
+  })
+}
+
+public static ConfirmCollaborateTodo(
+  data: ConfirmCollaborateTodosData 
+): CancelablePromise<ConfirmCollaborateTodosResponse> {
+  console.log(data)
+  return __request(OpenAPI, {
+    method: "PUT",
+    url: `/api/v1/todos/${data.todo_id}/confirm-collaborated`,
     query: { 
       skip: data.skip,
       limit: data.limit
@@ -404,7 +440,7 @@ export class SubTodosService {
    * @returns SubTodoPublic Successful Response
    * @throws ApiError
    */
-  public static updateSubTodo(
+  public static  updateSubTodo(
     data: SubTodosUpdateSubTodoData
   ): CancelablePromise<SubTodosUpdateSubTodoResponse> {
     return __request(OpenAPI, {

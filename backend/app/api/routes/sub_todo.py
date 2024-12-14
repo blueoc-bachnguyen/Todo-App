@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import SubTodo, SubTodoCreate, SubTodoPublic, SubTodosPublic, SubTodoUpdate, Message, Todo
+from app.models import Collaborator, SubTodo, SubTodoCreate, SubTodoPublic, SubTodosPublic, SubTodoUpdate, Message, Todo
 
 router = APIRouter(prefix="", tags=["subtodos"])
 
@@ -77,8 +77,6 @@ def update_sub_todo(
     parent_todo = session.get(Todo, sub_todo.todo_id)
     if not parent_todo:
         raise HTTPException(status_code=404, detail="Parent Todo not found")
-    if not current_user.is_superuser and (parent_todo.owner_id != current_user.id):
-        raise HTTPException(status_code=403, detail="Not enough permissions")
     update_data = sub_todo_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(sub_todo, key, value)

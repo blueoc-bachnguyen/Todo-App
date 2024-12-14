@@ -305,3 +305,92 @@ def get_collaborated_todos(
 
     return TodosPublic(data=todos, count=count)
 
+
+@router.get("/pending-collaborated", response_model=TodosPublic)
+def get_collaborated_todos(
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+) -> TodosPublic:
+    """
+    Retrieve todos with pending collaboration status for the current user.
+    """
+    if current_user.is_superuser:
+        # Count all pending collaborations
+        count_statement = select(func.count()).select_from(Collaborator).where(
+            Collaborator.status == "pending"
+        )
+        count = session.exec(count_statement).one()
+
+        # Retrieve all pending collaborations
+        statement = (
+            select(Todo)
+            .join(Collaborator, Todo.id == Collaborator.todo_id)
+            .where(Collaborator.status == "pending")
+            .offset(skip)
+            .limit(limit)
+        )
+        todos = session.exec(statement).all()
+    else:
+        # Count pending collaborations for the current user
+        count_statement = (
+            select(func.count())
+            .select_from(Collaborator)
+            .where(
+                Collaborator.user_id == current_user.id,
+                Collaborator.status == "pending",
+            )
+        )
+        count = session.exec(count_statement).one()
+
+        # Retrieve pending collaborations for the current user
+        statement = (
+            select(Todo)
+            .join(Collaborator, Todo.id == Collaborator.todo_id)
+            .where(
+                Collaborator.user_id == current_user.id,
+                Collaborator.status == "pending",
+            )
+            .offset(skip)
+            .limit(limit)
+        )
+        todos = session.exec(statement).all()
+
+    return TodosPublic(data=todos, count=count)
+
+@router.put("/{id}/confirm-collaborated", response_model=TodoPublic)
+def confirm_collaboration(
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: uuid.UUID,
+    todo_in: TodoUpdate,
+) -> Any:
+    """
+    Update the status of a todo and the associated collaborator status.
+    """
+    # Retrieve collaborator record
+    collaborator = session.get(Collaborator, id)
+    if not collaborator:
+        raise HTTPException(status_code=404, detail="Collaboration not found")
+
+    # Check permission to update the collaborator
+    if not current_user.is_superuser and (collaborator.user_id != current_user.id):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    # Retrieve the associated todo
+    todo = session.get(Todo, collaborator.todo_id)
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    # Update the todo
+    update_dict = todo_in.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        setattr(todo, key, value)
+
+    # Update the collaborator status to 'accept'
+    collaborator.status = "accept"
+    session.add(collaborator)
+
+    session.add(todo)
+    session.commit()
+    session.refresh(todo)
+    return todo

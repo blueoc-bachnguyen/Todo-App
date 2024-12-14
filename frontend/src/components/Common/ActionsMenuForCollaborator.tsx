@@ -18,10 +18,11 @@ import {
 } from "../../client";
 import EditUser from "../Admin/EditUser";
 import EditTodos from "../todos/Edittodos"
-import Delete from "./DeleteAlert";
+// import Delete from "./DeleteAlert";
 import InviteCollaborators from "../todos/AddCollaborator";
 import AddSubTodo from "../subtodos/AddSubTodo";
 import { useQuery } from "@tanstack/react-query";
+import Delete from "../todos/QuitCollaborate"
 
 interface ActionsMenuForCollaboratorProps {
   type: string
