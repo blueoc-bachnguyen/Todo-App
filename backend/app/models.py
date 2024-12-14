@@ -178,8 +178,8 @@ class Todo(TodoBase, table=True):
     )
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
-    subtodos: list["SubTodo"] = Relationship(back_populates="todo")
     collaborators: list["Collaborator"] = Relationship(back_populates="todo")
+    subtodos: list["SubTodo"] = Relationship(back_populates="todo", cascade_delete=True)
 
 class TodoCreate(TodoBase):
     pass

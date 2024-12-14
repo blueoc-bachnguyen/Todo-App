@@ -1,29 +1,30 @@
 import {
   Box,
-  IconButton,
   Menu,
-  MenuButton,
+  Avatar,
   MenuItem,
   MenuList,
-} from "@chakra-ui/react"
-import { Link } from "@tanstack/react-router"
-import { FaUserAstronaut } from "react-icons/fa"
-import { FiLogOut, FiUser } from "react-icons/fi"
+  IconButton,
+  MenuButton,
+} from '@chakra-ui/react';
+import { Link } from '@tanstack/react-router';
+import { FaUserAstronaut } from 'react-icons/fa';
+import { FiLogOut, FiUser } from 'react-icons/fi';
 
-import useAuth from "../../hooks/useAuth"
+import useAuth from '../../hooks/useAuth';
 
 const UserMenu = () => {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth();
 
   const handleLogout = async () => {
-    logout()
-  }
+    logout();
+  };
 
   return (
     <>
       {/* Desktop */}
       <Box
-        display={{ base: "none", md: "block" }}
+        display={{ base: 'none', md: 'block' }}
         position="fixed"
         top={4}
         right={4}
@@ -32,7 +33,7 @@ const UserMenu = () => {
           <MenuButton
             as={IconButton}
             aria-label="Options"
-            icon={<FaUserAstronaut color="white" fontSize="18px" />}
+            icon={<Avatar name={user?.full_name || undefined} />}
             bg="ui.main"
             isRound
             data-testid="user-menu"
@@ -53,7 +54,7 @@ const UserMenu = () => {
         </Menu>
       </Box>
     </>
-  )
-}
+  );
+};
 
-export default UserMenu
+export default UserMenu;

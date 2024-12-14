@@ -16,12 +16,12 @@ import {
   type SubTodoPublic, 
   TodosService 
 } from "../../client";
-import EditUser from "../Admin/EditUser";
-import EditTodos from "../todos/Edittodos"
-import Delete from "./DeleteAlert";
-import InviteCollaborators from "../todos/AddCollaborator";
-import AddSubTodo from "../subtodos/AddSubTodo";
-import { useQuery } from "@tanstack/react-query";
+
+import InviteCollaborators from "../Todo/AddCollaborator";
+import Delete from './DeleteAlert';
+import EditUser from '../Admin/EditUser';
+import EditTodos from '../Todo/EditTodo';
+import AddSubTodo from '../SubTodo/AddSubTodo';
 
 interface ActionsMenuProps {
   type: string;

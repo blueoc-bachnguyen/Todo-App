@@ -17,23 +17,23 @@ import {
   ModalContent,
   ModalCloseButton,
   useDisclosure,
-} from "@chakra-ui/react";
-import { z } from "zod";
-import { IoIosList } from "react-icons/io";
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+} from '@chakra-ui/react';
+import { z } from 'zod';
+import { IoIosList } from 'react-icons/io';
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
-import { Button } from "../../components/ui/button";
-import Navbar from "../../components/Common/Navbar.tsx";
-import AddTodo from "../../components/todos/Addtodos.tsx";
-import Delete from "../../components/Common/DeleteAlert.tsx";
-import ActionsMenu from "../../components/Common/ActionsMenu.tsx";
-import ActionsMenuForCollaborator from "../../components/Common/ActionsMenuForCollaborator.tsx";
-import EditSubTodo from "../../components/subtodos/EditSubTodo.tsx";
-import { PaginationFooter } from "../../components/Common/PaginationFooter.tsx";
-
-import { SubTodoPublic, TodosService, SubTodosService } from "../../client/index.ts";
+import { Button } from '../../components/ui/button';
+import Navbar from '../../components/Common/Navbar.tsx';
+import AddTodo from '../../components/Todo/AddTodo.tsx';
+import Delete from '../../components/Common/DeleteAlert.tsx';
+import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
+import EditSubTodo from '../../components/SubTodo/EditSubTodo.tsx';
+import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
+import ActionsMenuForCollaborator from '../../components/Common/ActionsMenuForCollaborator.tsx';
+import { SubTodoPublic } from '../../client/index.ts';
+import { TodosService, SubTodosService } from '../../client/index.ts';
 
 export const Route = createFileRoute('/_layout/todos')({
   component: Todos,
@@ -92,11 +92,13 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
     setDeleteSubTodoId(subTodoId);
     setSelectedTodoId(todoId);
     setIsDeleteSubTodoModalOpen(true);
+    refetch();
   };
 
   const handleCloseDeleteModal = () => {
     setDeleteSubTodoId(null);
     setIsDeleteSubTodoModalOpen(false);
+    refetch();
   };
   const setPage = (page: number) =>
     navigate({
@@ -831,7 +833,7 @@ function Todos() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: 'center', md: 'left' }} pt={12}>
-        Todo List Management
+        Todo Management
       </Heading>
 
       <Navbar
