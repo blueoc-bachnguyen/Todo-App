@@ -160,7 +160,7 @@ public static ListCollaboratorsFromTodo(
 ): CancelablePromise<CollaboratorInformation[]> {
   return __request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/todos/{todo_id}/collaborators",
+    url: "/api/v1/todos/{todo_id}/collaborators/all-collaborators",
     path: {
       todo_id: data.todo_id,
     },
@@ -199,7 +199,7 @@ public static getTodoForCollaborator(
   console.log(data)
   return __request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/todos/collaborated",
+    url: "/api/v1/todos/collaborated/all-todos",
     query: { 
       skip: data.skip,
       limit: data.limit
@@ -216,7 +216,7 @@ public static getPendingTodoForCollaborator(
   console.log(data)
   return __request(OpenAPI, {
     method: "GET",
-    url: "/api/v1/todos/pending-collaborated",
+    url: "/api/v1/todos/pending-collaborated/get-todos",
     query: { 
       skip: data.skip,
       limit: data.limit

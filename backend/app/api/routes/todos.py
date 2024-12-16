@@ -56,7 +56,7 @@ def read_todos(
     return TodosPublic(data=todos, count=count)
 
 
-@router.get("/{id}/todo", response_model=TodoPublic)
+@router.get("/{id}", response_model=TodoPublic)
 def read_todo(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
     """
     Get todo by ID.
@@ -81,7 +81,6 @@ def create_todo(
     session.commit()
     session.refresh(todo)
     return todo
-
 
 @router.put("/{id}", response_model=TodoPublic)
 def update_todo(
@@ -146,7 +145,7 @@ def invite_collaborator(
         raise HTTPException(status_code=400, detail=str(e))
     return collaborator
 
-@router.get("/{todo_id}/collaborators", response_model=List[CollaboratorUserDataPublic])
+@router.get("/{todo_id}/collaborators/all-collaborators", response_model=List[CollaboratorUserDataPublic])
 def get_collaborators(
     *,
     session: SessionDep,
@@ -230,7 +229,7 @@ def check_access(
     
     return Message(message="User has access to this Todo.")
 
-@router.get("/collaborated")
+@router.get("/collaborated/all-todos")
 def get_collaborated_todos(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> TodosPublic:
@@ -264,7 +263,7 @@ def get_collaborated_todos(
     todos = session.exec(statement).all()
     return TodosPublic(data=todos, count=count)
 
-@router.get("/pending-collaborated", response_model=TodosPublic)
+@router.get("/pending-collaborated/get-todos", response_model=TodosPublic)
 def get_collaborated_todos(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
 ) -> TodosPublic:

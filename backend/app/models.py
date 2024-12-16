@@ -14,8 +14,6 @@ class UserBase(SQLModel):
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
 
-# Định nghĩa Enum cho trạng thái
-
 class CollaboratorBase(SQLModel):
     status: str = Field(default="pending", max_length=255)
     created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
