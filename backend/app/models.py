@@ -4,6 +4,7 @@ from enum import Enum
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
+from typing import List, Optional
 
 
 # Shared properties
@@ -137,6 +138,8 @@ class Todo(TodoBase, table=True):
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
     subtodos: list["SubTodo"] = Relationship(back_populates="todo")
+    category_id: uuid.UUID = Field(foreign_key="category.id", nullable=True)
+    category: Optional['Category']  = Relationship(back_populates='todos')
 
 class TodoCreate(TodoBase):
     pass
@@ -211,6 +214,7 @@ class Category(CategoryBase, table=True):
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
     owner: User | None = Relationship(back_populates="categories")
+    todos: List['Todo'] = Relationship(back_populates="category")
 
 class CategoryCreate(CategoryBase):
      pass
