@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import SubTodo, SubTodoCreate, SubTodoPublic, SubTodosPublic, SubTodoUpdate, Message, Todo
+from app.models import Collaborator, SubTodo, SubTodoCreate, SubTodoPublic, SubTodosPublic, SubTodoUpdate, Message, Todo
 
 router = APIRouter(prefix="", tags=["subtodos"])
 
@@ -14,9 +14,13 @@ router = APIRouter(prefix="", tags=["subtodos"])
 def read_subtodo(session: SessionDep, current_user: CurrentUser, todo_id: uuid.UUID) -> Any:
     todo = session.get(Todo, todo_id)
     if not current_user.is_superuser and (todo.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
-    
-    statement = select(SubTodo).where(SubTodo.todo_id == todo_id).order_by(SubTodo.created_at.desc())
+        collaborator_exists = session.query(Collaborator).filter(
+            Collaborator.todo_id == todo.id,
+            Collaborator.user_id == current_user.id
+        ).first()
+        if not collaborator_exists:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+    statement = select(SubTodo).where(SubTodo.todo_id == todo_id)
     subtodos = session.exec(statement).all()
     if not subtodos:
         raise HTTPException(status_code=404, detail="Sub Task not found")
@@ -37,7 +41,12 @@ def read_sub_todo(
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
     if not current_user.is_superuser and todo.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions to access this Todo")
+        collaborator_exists = session.query(Collaborator).filter(
+            Collaborator.todo_id == todo.id,
+            Collaborator.user_id == current_user.id
+        ).first()
+        if not collaborator_exists:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     statement = select(SubTodo).where(SubTodo.todo_id == todo_id, SubTodo.id == id)
     sub_todo = session.exec(statement).first()
     if not sub_todo:
@@ -79,8 +88,6 @@ def update_sub_todo(
     parent_todo = session.get(Todo, sub_todo.todo_id)
     if not parent_todo:
         raise HTTPException(status_code=404, detail="Parent Todo not found")
-    if not current_user.is_superuser and (parent_todo.owner_id != current_user.id):
-        raise HTTPException(status_code=403, detail="Not enough permissions")
     update_data = sub_todo_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(sub_todo, key, value)
@@ -103,7 +110,12 @@ def delete_sub_todo(
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
     if not current_user.is_superuser and todo.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions to access this Todo")
+        collaborator_exists = session.query(Collaborator).filter(
+            Collaborator.todo_id == todo.id,
+            Collaborator.user_id == current_user.id
+        ).first()
+        if not collaborator_exists:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     sub_todo = session.get(SubTodo, id)
     if not sub_todo:
         raise HTTPException(status_code=404, detail="SubTodo not found")

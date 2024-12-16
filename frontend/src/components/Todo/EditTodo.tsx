@@ -11,18 +11,19 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-} from '@chakra-ui/react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+} from "@chakra-ui/react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { type SubmitHandler, useForm } from "react-hook-form";
 
 import {
   type ApiError,
   type TodoPublic,
   type TodoUpdate,
   TodosService,
-} from '../../client';
-import useCustomToast from '../../hooks/useCustomToast';
-import { handleError } from '../../utils';
+  type UserPublic,
+} from "../../client";
+import useCustomToast from "../../hooks/useCustomToast";
+import { handleError } from "../../utils";
 
 interface EditTodoProps {
   todo: TodoPublic;
@@ -43,6 +44,19 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
     criteriaMode: 'all',
     defaultValues: todo,
   });
+
+
+  function getCollaboratorsQueryOptions(todoId: string) {
+    return {
+      queryFn: () => TodosService.ListCollaboratorsFromTodo({ todo_id: todoId }),
+      queryKey: ["todos", { todoId }],
+    }
+  }
+
+  const { isLoading : isCollaboratorsLoading ,data : collaborators, isError  } = useQuery(getCollaboratorsQueryOptions(todo.id))
+
+  // console.log(collaborators)
+
 
   const mutation = useMutation({
     mutationFn: (data: TodoUpdate) =>
@@ -75,6 +89,31 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
   const onCancel = () => {
     reset();
     onClose();
+  };
+
+  function getRemoveCollaboratorMutationOptions(todoId: string, queryClient: any, showToast: any) {
+    return {
+      mutationFn: (collaboratorId: string) =>
+        TodosService.removeCollaboratorFromTodo({
+          todo_id: todoId,
+          collaborator_user_id: collaboratorId,
+        }),
+      onSuccess: () => {
+        showToast("Success!", "Collaborator removed successfully.", "success");
+        queryClient.invalidateQueries(["additionalData", { todoId }]);
+      },
+      onError: (err: ApiError) => {
+        handleError(err, showToast);
+      },
+    };
+  }
+
+  const removeCollaboratorMutation = useMutation(
+    getRemoveCollaboratorMutationOptions(todo.id, queryClient, showToast)
+  );
+
+  const handleRemoveCollaborator = (collaboratorId: string) => {
+    removeCollaboratorMutation.mutate(collaboratorId);
   };
 
   return (
@@ -112,6 +151,38 @@ const EditTodos = ({ todo, isOpen, onClose }: EditTodoProps) => {
                 type="text"
               />
             </FormControl>
+            
+            <FormControl mt={6}>
+            
+            <FormControl mt={6}>
+            <FormLabel>Collaborators</FormLabel>
+            {isCollaboratorsLoading ? (
+              <p>Loading collaborators...</p>
+            ) : Array.isArray(collaborators) && collaborators.length > 0 ? (
+              <ul>
+                {collaborators.map((collaborator: UserPublic) => (
+                  <li key={collaborator.id} style={{ display: "flex", alignItems: "center" }}>
+                    <span style={{ flexGrow: 1 }}>
+                      {collaborator.full_name} ({collaborator.email})
+                    </span>
+                    <Button
+                      size="xs"
+                      colorScheme="red"
+                      ml={2}
+                      onClick={() => handleRemoveCollaborator(collaborator.id)}
+                    >
+                      X
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No collaborators found.</p>
+            )}
+              </FormControl>
+
+          </FormControl>
+
           </ModalBody>
           <ModalFooter gap={3}>
             <Button

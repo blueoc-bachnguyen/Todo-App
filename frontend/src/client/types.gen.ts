@@ -40,6 +40,12 @@ export type TodoUpdate = {
   status?: 'pending' | 'completed' | 'in_progress' | null;
 };
 
+export type CollaboratorTodoUpdate = {
+  title?: string | null;
+  desc?: string | null;
+  status?: 'pending' | 'accepted' | 'rejected' | null;
+};
+
 // SubTodo
 export type SubTodoCreate = {
   title: string;
@@ -94,12 +100,20 @@ export type UserCreate = {
 };
 
 export type UserPublic = {
-  email: string;
-  is_active?: boolean;
-  is_superuser?: boolean;
-  full_name?: string | null;
-  id: string;
-};
+  email: string
+  is_active?: boolean
+  is_superuser?: boolean
+  full_name?: string | null
+  id: string
+  invite_code?: string
+}
+
+export type CollaboratorInformation = {
+  id: string
+  email: string
+  full_name?: string | null
+  invite_code?: string
+}
 
 export type UserRegister = {
   email: string;
@@ -139,6 +153,23 @@ export type TodosReadTodosData = {
 }
 
 export type TodosReadTodosResponse = TodosPublic;
+
+export type TodosReadCollaboratorTodosData = {
+  limit?: number
+  skip?: number
+  user_id: string
+}
+
+export type ConfirmCollaborateTodosData = {
+  limit?: number
+  skip?: number
+  todo_id: string
+  requestBody: CollaboratorTodoUpdate;
+}
+
+export type ConfirmCollaborateTodosResponse = Message
+
+export type TodosReadCollaboratorTodosResponse = TodosPublic
 
 export type TodosCreateTodoData = {
   requestBody: TodoCreate;
@@ -288,4 +319,19 @@ export type UtilsTestEmailData = {
 
 export type UtilsTestEmailResponse = Message;
 
-export type UtilsHealthCheckResponse = boolean;
+export type UtilsHealthCheckResponse = boolean
+
+export interface TodosAddCollaboratorData {
+  todo_id: string; // ID của Todo
+  invite_code: string; // Mã mời cộng tác viên
+}
+
+export interface TodosAddCollaboratorResponse {
+  message: string;
+}
+
+export type CollaboratorLeaveTodoData = {
+  id: string
+}
+
+export type CollaboratorLeaveTodoResponse = Message
