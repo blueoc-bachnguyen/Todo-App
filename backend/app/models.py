@@ -1,23 +1,52 @@
 from datetime import datetime
 import uuid
 from enum import Enum
-
+from secrets import token_hex
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
-
+from typing import Optional
 
 # Shared properties
 class UserBase(SQLModel):
+    id: uuid.UUID | None = Field(default_factory=uuid.uuid4)  # Make `id` optional with default factory
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
 
+class CollaboratorBase(SQLModel):
+    status: str = Field(default="pending", max_length=255)
+    created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
+
+class Collaborator(CollaboratorBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    todo_id: uuid.UUID = Field(
+        foreign_key="todo.id", nullable=False, ondelete="CASCADE"
+    )
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    todo: Optional["Todo"] = Relationship(back_populates="collaborators")
+    user: Optional["User"] = Relationship(back_populates="collaborations")
+
+
+class CollaboratorCreate(SQLModel):
+    todo_id: uuid.UUID
+    user_id: uuid.UUID
+
+class CollaboratorUpdate(SQLModel):
+    invite_code: str
+
+class CollaboratorPublic(SQLModel):
+    id: uuid.UUID
+    todo_id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=40)
-
 
 class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
@@ -47,11 +76,20 @@ class User(UserBase, table=True):
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     todos: list["Todo"] = Relationship(back_populates="owner", cascade_delete=True)
+    invite_code: str = Field(default_factory=lambda: token_hex(4), unique=True, index=True)
+    collaborations: list["Collaborator"] = Relationship(back_populates="user")
 
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
+    invite_code: str
+
+class CollaboratorUserDataPublic(SQLModel):
+    id: uuid.UUID
+    email: EmailStr
+    full_name: str
+    invite_code: str
 
 
 class UsersPublic(SQLModel):
@@ -136,6 +174,7 @@ class Todo(TodoBase, table=True):
     )
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
+    collaborators: list["Collaborator"] = Relationship(back_populates="todo")
     subtodos: list["SubTodo"] = Relationship(back_populates="todo", cascade_delete=True)
 
 class TodoCreate(TodoBase):

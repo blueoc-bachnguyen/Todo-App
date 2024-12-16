@@ -132,6 +132,14 @@ const UserInformation = () => {
               <FormErrorMessage>{errors.email.message}</FormErrorMessage>
             )}
           </FormControl>
+          <FormControl mt={4} isInvalid={!!errors.invite_code}>
+            <FormLabel color={color} htmlFor="invite_code">
+              Invite code
+            </FormLabel>
+            <Text size="md" py={2} isTruncated maxWidth="250px">
+                {currentUser?.invite_code}
+              </Text>
+          </FormControl>
           <Flex mt={4} gap={3}>
             <Button
               variant="primary"
