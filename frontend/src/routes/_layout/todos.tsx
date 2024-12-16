@@ -74,7 +74,6 @@ function getCollaboratedTodosQueryOptions({ page }: { page: number }) {
   }
 }
 
-
 function TodosTable({ searchQuery }: { searchQuery: string }) {
   const { page } = Route.useSearch();
   const queryClient = useQueryClient();
@@ -495,8 +494,8 @@ function TodosCollaboratorTable() {
     navigate({ search: (prev: {[key: string]: string}) => ({ ...prev, page }) })
   const {
     data: items,
-    isPending,
     isPlaceholderData,
+    isPending: isPendingForTodos
   } = useQuery({
     ...getCollaboratedTodosQueryOptions({ page }),
     placeholderData: (prevData) => prevData,
@@ -526,16 +525,6 @@ function TodosCollaboratorTable() {
     setDeleteSubTodoId(null);
     setIsDeleteSubTodoModalOpen(false);
   };
-  
-  const {
-    data: todos,
-    isPending: isPendingForTodos,
-    isPlaceholderData: isPlaceholderDataForTodos,
-  } = useQuery({
-    ...getTodosQueryOptions({ page }),
-    
-    placeholderData: (prevData) => prevData,
-  });
 
   const {
     data: subtodos,
@@ -546,43 +535,11 @@ function TodosCollaboratorTable() {
     enabled: !!selectedTodoId,
   });
 
-
-
   useEffect(() => {
     if (hasNextPage) {
       queryClient.prefetchQuery(getTodosQueryOptions({ page: page + 1 }));
     }
   }, [page, queryClient, hasNextPage]);
-
-  const changeTodoStatus = async (
-    todoId: string,
-    newStatus: 'pending' | 'completed' | 'in_progress'
-  ) => {
-    try {
-      queryClient.setQueryData(['todos', { page }], (oldData: any) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map((todo: any) =>
-            todo.id === todoId ? { ...todo, status: newStatus } : todo
-          ),
-        };
-      });
-
-      await TodosService.updateTodo({
-        id: todoId,
-        requestBody: { status: newStatus },
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ['todos'],
-        exact: true,
-        refetchType: 'active',
-      });
-    } catch (error) {
-      console.error('Failed to change status', error);
-    }
-  };
 
   const changeSubTodoStatus = async (
     subTodoId: string,
@@ -628,7 +585,6 @@ function TodosCollaboratorTable() {
   
   const changeStatus = async (todoId: string, newStatus: "pending" | "completed" | "in_progress") => {
     try {
-      // Optimistic update
       queryClient.setQueryData(["collaborations", { page }], (oldData: any) => {
         if (!oldData) return oldData;
         return {
@@ -638,11 +594,7 @@ function TodosCollaboratorTable() {
           ),
         };
       });
-  
-      // Call API to persist changes
       await TodosService.updateTodo({ id: todoId, requestBody: { status: newStatus } });
-  
-      // Optionally refresh data after successful update
       queryClient.invalidateQueries({ queryKey: ["collaborations"], exact: true, refetchType: "active" });
     } catch (error) {
       console.error("Failed to change status", error);
