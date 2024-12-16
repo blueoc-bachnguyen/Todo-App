@@ -94,29 +94,22 @@ def update_todo(
     """
     Update an item.
     """
-    # Lấy thông tin todo
     todo = session.get(Todo, id)
     if not todo:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    # Kiểm tra quyền sửa todo
     if not current_user.is_superuser and (todo.owner_id != current_user.id):
-        # Truy vấn bảng Collaborator để kiểm tra quyền
         collaborator_exists = session.query(Collaborator).filter(
             Collaborator.todo_id == todo.id,
             Collaborator.user_id == current_user.id
         ).first()
         if not collaborator_exists:
             raise HTTPException(status_code=403, detail="Not enough permissions")
-
-    # Cập nhật todo
     update_dict = todo_in.model_dump(exclude_unset=True)
     todo.sqlmodel_update(update_dict)
     session.add(todo)
     session.commit()
     session.refresh(todo)
     return todo
-
 
 @router.delete("/{id}")
 def delete_item(
@@ -135,8 +128,6 @@ def delete_item(
     session.commit()
     return Message(message="Task deleted successfully")
 
-
-
 @router.post("/{todo_id}/invite", response_model=CollaboratorUpdate)
 def invite_collaborator(
     *, 
@@ -145,7 +136,6 @@ def invite_collaborator(
     todo_id: uuid.UUID, 
     todo_in: CollaboratorUpdate
 ) -> CollaboratorUpdate:
-
     try:
         if (todo_in.invite_code == current_user.invite_code):
             raise HTTPException(status_code=400, detail="You cannot invite yourself")
@@ -154,10 +144,7 @@ def invite_collaborator(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    # Return the collaborator or something that matches CollaboratorUpdate
-    return collaborator  # Make sure this matches the response model
-
+    return collaborator
 
 @router.get("/{todo_id}/collaborators", response_model=List[CollaboratorUserDataPublic])
 def get_collaborators(
@@ -193,34 +180,20 @@ def remove_collaborator(
     """
     Remove a collaborator from a Todo.
     """
-    # Query to find the collaborator
     collaborator_query = select(Collaborator).where(
         Collaborator.todo_id == todo_id, Collaborator.user_id == user_id
     )
-
-    # Execute the query
     collaborator = session.exec(collaborator_query).first()
-
-    # If no collaborator is found, raise a 404 error
     if not collaborator:
         raise HTTPException(status_code=404, detail="Collaborator not found")
-
-    # Check if the current user has permission to remove collaborators
     todo_query = select(Todo).where(Todo.id == todo_id)
     todo = session.exec(todo_query).first()
-
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
-
     if todo.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="Permission denied")
-
-    # Remove the collaborator from the database
     session.delete(collaborator)
-
-    # Commit the changes
     session.commit()
-
     return Message(message="Collaborator removed successfully")
 
 @router.delete("/{todo_id}/leave_collaborate", response_model=Message)
@@ -230,33 +203,18 @@ def remove_collaborator(
     """
     Remove a collaborator from a Todo.
     """
-    # Query to find the collaborator
     collaborator_query = select(Collaborator).where(
         Collaborator.todo_id == todo_id, Collaborator.user_id == current_user.id
     )
-
-    # Execute the query
     collaborator = session.exec(collaborator_query).first()
-
-    # If no collaborator is found, raise a 404 error
     if not collaborator:
         raise HTTPException(status_code=404, detail="Collaborator not found")
-
-    # Check if the current user has permission to remove collaborators
     todo_query = select(Todo).where(Todo.id == todo_id)
     todo = session.exec(todo_query).first()
-
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
-
-    
-
-    # Remove the collaborator from the database
     session.delete(collaborator)
-
-    # Commit the changes
     session.commit()
-
     return Message(message="Collaborator removed successfully")
 
 @router.get("/{todo_id}/access", response_model=Message)
@@ -272,7 +230,6 @@ def check_access(
     
     return Message(message="User has access to this Todo.")
 
-# getCollaboratedTodos
 @router.get("/collaborated")
 def get_collaborated_todos(
     session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
@@ -292,8 +249,6 @@ def get_collaborated_todos(
         .where(Collaborator.user_id == current_user.id and Collaborator.status == "accepted")
     )
     count = session.exec(count_statement).one()
-
-    # Lấy danh sách todos mà user đang cộng tác
     statement = (
     select(Todo)
     .join(Collaborator, Todo.id == Collaborator.todo_id)
@@ -307,9 +262,7 @@ def get_collaborated_todos(
     .limit(limit)
 )
     todos = session.exec(statement).all()
-
     return TodosPublic(data=todos, count=count)
-
 
 @router.get("/pending-collaborated", response_model=TodosPublic)
 def get_collaborated_todos(
@@ -319,11 +272,8 @@ def get_collaborated_todos(
     Retrieve todos with pending collaboration status for the current user.
     """
     if current_user.is_superuser:
-        # Count all pending collaborations
         count_statement = select(func.count()).select_from(Collaborator)
         count = session.exec(count_statement).one()
-
-        # Retrieve all pending collaborations
         statement = (
             select(Todo)
             .join(Collaborator, Todo.id == Collaborator.todo_id)
@@ -332,7 +282,6 @@ def get_collaborated_todos(
         )
         todos = session.exec(statement).all()
     else:
-        # Count pending collaborations for the current user
         count_statement = (
             select(func.count())
             .select_from(Collaborator)
@@ -341,8 +290,6 @@ def get_collaborated_todos(
             )
         )
         count = session.exec(count_statement).one()
-
-        # Retrieve pending collaborations for the current user
         statement = (
             select(Todo)
             .join(Collaborator, Todo.id == Collaborator.todo_id)
@@ -353,7 +300,6 @@ def get_collaborated_todos(
             .limit(limit)
         )
         todos = session.exec(statement).all()
-
     return TodosPublic(data=todos, count=count)
 
 @router.put("/{id}/confirm-collaborated", response_model=TodoPublic)
@@ -367,43 +313,26 @@ def confirm_collaboration(
     """
     Update the status of a todo and the associated collaborator status.
     """
-    # Retrieve collaborator record
     collaborator_query = select(Collaborator).where(Collaborator.todo_id == id)
     collaborator_result = session.execute(collaborator_query).scalars().first()
     if not collaborator_result:
         raise HTTPException(status_code=404, detail="Collaboration not found")
-
     collaborator = collaborator_result
-
-    # Check permission to update the collaborator
     if not current_user.is_superuser and collaborator.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-
-    # Retrieve the associated todo
     todo = session.get(Todo, id)
     if not todo:
         raise HTTPException(status_code=404, detail="Todo not found")
-
-    # Update the todo
-    update_data = todo_in.dict(exclude_unset=True)  # Adjust based on Pydantic version
+    update_data = todo_in.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(todo, key, value)
-
-    #if status is rejected, delete the collaborator
     if todo_in.status == "rejected":
         session.delete(collaborator)
         session.commit()
         return todo
-
-
-
     collaborator.status = todo_in.status
     session.add(collaborator)
-
-    # Save changes
     session.add(todo)
     session.commit()
-
-    # Refresh and return updated todo
     session.refresh(todo)
     return todo
