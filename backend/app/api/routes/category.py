@@ -25,9 +25,9 @@ def create_item(
 #  GET[/categories]
 @router.get("/", response_model=ListCategories)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, page: int = 1, limit: int = 10
+    session: SessionDep, current_user: CurrentUser, page: int = 1, limit: int = 10, sort: str | None = None
 ) -> Any:
-    return crud.get_all_categories(session=session, owner_id= current_user.id, page=page, limit=limit)
+    return crud.get_all_categories(session=session, owner_id= current_user.id, page=page, limit=limit, sort= sort)
     
 
 #  GET[/categories/:id]
