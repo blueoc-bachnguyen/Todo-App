@@ -69,7 +69,7 @@ export class TodosService {
  * Add Collaborator
  * Add collaborator to todo.
  * @param data The data for the request.
- * @param data.collaborator_invite_code - Mã mời cộng tác viên.
+ * @param data.collaborator_invite_code
  * @returns TodosAddCollaboratorResponse Successful Response
  * @throws ApiError
  */
@@ -92,9 +92,8 @@ export class TodosService {
 
   /**
  * Get Collaborators for Todo
- * Lấy danh sách cộng tác viên của một Todo.
  * @param data The data for the request.
- * @param data.todo_id - ID của Todo cần lấy danh sách cộng tác viên
+ * @param data.todo_id
  * @returns Array of Users Successful Response
  * @throws ApiError
  */
@@ -116,10 +115,9 @@ public static getCollaboratorsForTodo(
 
 /**
  * Remove Collaborator from Todo
- * Xóa cộng tác viên khỏi Todo.
  * @param data The data for the request.
- * @param data.todo_id - ID của Todo cần xóa cộng tác viên
- * @param data.collaborator_user_id - ID của người dùng cộng tác viên
+ * @param data.todo_id
+ * @param data.collaborator_user_id
  * @returns TodosRemoveCollaboratorResponse Successful Response
  * @throws ApiError
  */
@@ -173,9 +171,8 @@ public static ListCollaboratorsFromTodo(
 
 /**
  * Check Access for Todo
- * Kiểm tra quyền truy cập của người dùng đối với Todo.
  * @param data The data for the request.
- * @param data.todo_id - ID của Todo cần kiểm tra quyền truy cập
+ * @param data.todo_id
  * @returns Message Successful Response
  * @throws ApiError
  */

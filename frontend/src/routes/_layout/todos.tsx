@@ -816,10 +816,10 @@ function TodosCollaboratorTable() {
 }
 
 function Todos() {
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Trạng thái lưu từ khóa tìm kiếm
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const handleSearch = (search: string) => {
-    setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
+    setSearchQuery(search);
   };
 
   return (

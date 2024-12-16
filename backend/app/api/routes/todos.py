@@ -68,7 +68,7 @@ def read_todo(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> 
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return todo
 
-# CurrentUser to authenticat ->middleware
+# CurrentUser to authenticate ->middleware
 @router.post("", response_model=TodoPublic)
 def create_todo(
     *, session: SessionDep, current_user: CurrentUser, todo_in: TodoCreate

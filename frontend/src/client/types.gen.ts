@@ -200,7 +200,6 @@ export type TodosDeleteTodoResponse = Message;
 export type SubTodosReadSubTodosData = {
   limit?: number;
   skip?: number;
-  todo_id: string;
 };
 
 export type SubTodosReadSubTodosResponse = SubTodosPublic;
@@ -322,8 +321,8 @@ export type UtilsTestEmailResponse = Message;
 export type UtilsHealthCheckResponse = boolean
 
 export interface TodosAddCollaboratorData {
-  todo_id: string; // ID của Todo
-  invite_code: string; // Mã mời cộng tác viên
+  todo_id: string;
+  invite_code: string;
 }
 
 export interface TodosAddCollaboratorResponse {
