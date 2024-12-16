@@ -1,5 +1,6 @@
 import uuid
 from typing import Any
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
@@ -14,6 +15,7 @@ def read_subtodo(session: SessionDep, current_user: CurrentUser, todo_id: uuid.U
     todo = session.get(Todo, todo_id)
     if not current_user.is_superuser and (todo.owner_id != current_user.id):
         raise HTTPException(status_code=400, detail="Not enough permissions")
+    
     statement = select(SubTodo).where(SubTodo.todo_id == todo_id).order_by(SubTodo.created_at.desc())
     subtodos = session.exec(statement).all()
     if not subtodos:
@@ -82,10 +84,12 @@ def update_sub_todo(
     update_data = sub_todo_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(sub_todo, key, value)
+    sub_todo.updated_at = datetime.now()
+    sub_todo.sqlmodel_update(update_data)
+
     session.add(sub_todo)
     session.commit()
     session.refresh(sub_todo)
-    
     return sub_todo
 
 @router.delete("/todos/{todo_id}/subtodos/{id}")
