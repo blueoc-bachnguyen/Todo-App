@@ -1,5 +1,6 @@
 import uuid
 from typing import Any
+from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import func, select
@@ -90,10 +91,12 @@ def update_sub_todo(
     update_data = sub_todo_in.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(sub_todo, key, value)
+    sub_todo.updated_at = datetime.now()
+    sub_todo.sqlmodel_update(update_data)
+
     session.add(sub_todo)
     session.commit()
     session.refresh(sub_todo)
-    
     return sub_todo
 
 @router.delete("/todos/{todo_id}/subtodos/{id}")

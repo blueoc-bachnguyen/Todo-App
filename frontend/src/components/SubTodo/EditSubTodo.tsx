@@ -79,7 +79,6 @@ const EditSubTodo = ({ subtodo, isOpen, onClose }: EditSubTodoProps) => {
         isCentered
         isOpen={isOpen}
         onClose={onClose}
-        closeOnOverlayClick={false}
       >
         <ModalOverlay />
         <ModalContent as="form" onSubmit={handleSubmit(onSubmit)}>

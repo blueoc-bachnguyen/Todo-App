@@ -19,6 +19,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { z } from 'zod';
+import { FaPlus } from 'react-icons/fa6';
 import { IoIosList } from 'react-icons/io';
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -34,6 +35,7 @@ import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
 import ActionsMenuForCollaborator from '../../components/Common/ActionsMenuForCollaborator.tsx';
 import { SubTodoPublic } from '../../client/index.ts';
 import { TodosService, SubTodosService } from '../../client/index.ts';
+import AddSubTodo from '../../components/SubTodo/AddSubTodo.tsx';
 
 export const Route = createFileRoute('/_layout/todos')({
   component: Todos,
@@ -79,6 +81,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
   const [selectedSubTodo, setSelectedSubTodo] = useState<SubTodoPublic | null>(
     null
   );
+  const addSubTodoModal = useDisclosure();
   const editSubTodoModal = useDisclosure();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -87,18 +90,21 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
   const [isDeleteSubTodoModalOpen, setIsDeleteSubTodoModalOpen] =
     useState(false);
   const [deleteSubTodoId, setDeleteSubTodoId] = useState<string | null>(null);
+  const [hover, setHover] = useState<boolean>(false);
 
   const handleOpenDeleteModal = (subTodoId: string, todoId: string) => {
     setDeleteSubTodoId(subTodoId);
     setSelectedTodoId(todoId);
     setIsDeleteSubTodoModalOpen(true);
-    refetch();
   };
 
   const handleCloseDeleteModal = () => {
     setDeleteSubTodoId(null);
     setIsDeleteSubTodoModalOpen(false);
-    refetch();
+  };
+
+  const handleOpenAddSubTodoModal = () => {
+    addSubTodoModal.onOpen();
   };
   const setPage = (page: number) =>
     navigate({
@@ -115,11 +121,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
     placeholderData: (prevData) => prevData,
   });
 
-  const {
-    data: subtodos,
-    isFetching: isFetchingSubTodos,
-    refetch,
-  } = useQuery({
+  const { data: subtodos, isFetching: isFetchingSubTodos } = useQuery({
     ...getSubTodosQueryOptions(selectedTodoId || ''),
     enabled: !!selectedTodoId,
   });
@@ -187,7 +189,11 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         todo_id: todoId,
         requestBody: { status: newStatus },
       });
-      refetch();
+      queryClient.invalidateQueries({
+        queryKey: ['subtodos', todoId],
+        // exact: true,
+        // refetchType: 'active',
+      });
     } catch (error) {
       console.error('Failed to change status', error);
     }
@@ -290,11 +296,23 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                       <ActionsMenu type={'Todo'} value={todo} />
                     </Td>
                     <Td>
-                      <IoIosList
-                        size={20}
+                      <button
+                        style={{
+                          borderRadius: '50%',
+                          backgroundColor: '#0D92F4',
+                          width: '48px',
+                          height: '48px',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.3s ease',
+                          outline: 'none',
+                        }}
                         onClick={() => handleListClick(todo.id)}
-                        style={{ cursor: 'pointer' }}
-                      />
+                      >
+                        <IoIosList size={20} color="white" />
+                      </button>
                     </Td>
                   </Tr>
                 ))}
@@ -309,13 +327,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         hasPreviousPage={hasPreviousPage}
       />
 
-      <Modal
-        size="6xl"
-        isCentered
-        isOpen={isOpen}
-        onClose={onClose}
-        closeOnOverlayClick={false}
-      >
+      <Modal size="6xl" isCentered isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>All SubTodos of {selectedTodo?.title}</ModalHeader>
@@ -417,9 +429,37 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                     ))}
                   </Tbody>
                 </Table>
+                <button
+                  style={{
+                    borderRadius: '50%',
+                    backgroundColor: '#0D92F4',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: '16px',
+                    marginBottom: '16px',
+                    float: 'right',
+                    opacity: hover ? 0.8 : 1,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.3s ease',
+                    outline: 'none',
+                  }}
+                  onMouseOver={() => setHover(!hover)}
+                  onMouseOut={() => setHover(!hover)}
+                  onClick={handleOpenAddSubTodoModal}
+                >
+                  <FaPlus color="white" />
+                  <AddSubTodo
+                    isOpen={addSubTodoModal.isOpen}
+                    onClose={addSubTodoModal.onClose}
+                    todoId={selectedTodoId || ''}
+                  />
+                </button>
               </TableContainer>
             ) : (
-              <p>No subtasks available</p>
+              <p>{selectedTodo?.title} doesn't have subtodo</p>
             )}
           </ModalBody>
         </ModalContent>
