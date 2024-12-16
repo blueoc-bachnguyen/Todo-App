@@ -72,7 +72,6 @@ def create_category(*, session: Session, cat_in: CategoryCreate, owner_id: uuid.
     return db_cat
 
 def get_all_categories(session: Session, owner_id: uuid.UUID, page: int, limit: int) -> ListCategories:
-    print('hi')
     offset = (page - 1) * limit
     count_statement = (
             select(func.count())
@@ -85,6 +84,7 @@ def get_all_categories(session: Session, owner_id: uuid.UUID, page: int, limit: 
             .where(Category.owner_id == owner_id)
             .offset(offset)
             .limit(limit)
+            .order_by(Category.created_at.desc())
         )
     items = session.exec(statement).all()
     pages = math.ceil(count / limit)
