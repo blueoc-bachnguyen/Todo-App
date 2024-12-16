@@ -147,6 +147,10 @@ class TodoUpdate(TodoBase):
     desc: str | None = Field(default=None, max_length=255)
     status: str | None = Field(default=None, max_length=255)
 
+class TodoUpdateMultiple(SQLModel):
+    todo_ids: list[uuid.UUID]
+    status: str
+
 class TodoPublic(TodoBase):
     id: uuid.UUID
     owner_id: uuid.UUID

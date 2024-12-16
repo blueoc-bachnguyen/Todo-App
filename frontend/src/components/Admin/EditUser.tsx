@@ -36,6 +36,7 @@ interface UserUpdateForm extends UserUpdate {
   confirm_password: string
 }
 
+
 const EditUser = ({ user, isOpen, onClose }: EditUserProps) => {
   const queryClient = useQueryClient()
   const showToast = useCustomToast()

@@ -40,6 +40,11 @@ export type TodoUpdate = {
   status?: 'pending' | 'completed' | 'in_progress' | null;
 };
 
+export type TodoUpdateMultiple = {
+  todo_ids: string[];
+  status: 'pending' | 'completed' | 'in_progress';
+};
+
 // SubTodo
 export type SubTodoCreate = {
   title: string;
@@ -164,6 +169,12 @@ export type TodosDeleteTodoData = {
 };
 
 export type TodosDeleteTodoResponse = Message;
+
+export type TodosUpdateMultipleTodosData = {
+  requestBody: TodoUpdateMultiple;
+};
+
+export type TodosUpdateMultipleTodosResponse = TodoPublic[];
 
 // SubTodo
 export type SubTodosReadSubTodosData = {
