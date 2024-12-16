@@ -70,7 +70,9 @@ const Delete = ({ type, id, todoId, isOpen, onClose }: DeleteProps) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: [type === 'Todo' ? 'todos' : 'users'],
+        queryKey: [
+          type === 'Todo' ? 'todos' : type === 'users' ? 'users' : 'subtodos',
+        ],
       });
     },
   });
