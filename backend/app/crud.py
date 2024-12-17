@@ -4,13 +4,9 @@ import math
 from sqlmodel import Session, select,func
 from datetime import datetime
 from app.core.security import get_password_hash, verify_password
-<<<<<<< HEAD
-from app.models import Item, ItemCreate, Todo, TodoCreate, User, UserCreate, UserUpdate, SubTodoCreate,Category,CategoryCreate,CategoryUpdate,ListCategories,LevelEnum,Message
 from fastapi import HTTPException
-=======
-from app.models import Collaborator, Item, ItemCreate, Todo, TodoCreate, User, UserCreate, UserUpdate, SubTodoCreate, CollaboratorUpdate
+from app.models import Collaborator, Item, ItemCreate, Todo, TodoCreate, User, UserCreate, UserUpdate, SubTodoCreate, CollaboratorUpdate,Category,CategoryCreate,CategoryUpdate,ListCategories,LevelEnum,Message
 
->>>>>>> 240942e0aa8b44cbe3fdef2ac5a7f77adc093538
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
@@ -67,8 +63,7 @@ def create_subtodo(*, session: Session, item_in: SubTodoCreate, owner_id: uuid.U
     return db_item
 
 
-<<<<<<< HEAD
-#  ========= CATEGORY============
+
 
 def create_category(*, session: Session, cat_in: CategoryCreate, owner_id: uuid.UUID) -> Category:
     db_cat = Category.model_validate(cat_in, update={"owner_id": owner_id})
@@ -143,7 +138,7 @@ def delete_all_categories(session: Session, owner_id: uuid.UUID):
         session.delete(cat)
     session.commit()
     return Message(message="all cats deleted successfully")
-=======
+
 # New function query for inviting collaborators
 def add_collaborator_by_invite_code(
     *, session: Session, todo_id: uuid.UUID, invite_code: str
@@ -204,4 +199,3 @@ def get_todos_by_user(*, session: Session, user_id: uuid.UUID) -> list[Todo]:
         select(Todo).join(Collaborator).where(Collaborator.user_id == user_id)
     ).all()
     return todos_as_owner + todos_as_collaborator
->>>>>>> 240942e0aa8b44cbe3fdef2ac5a7f77adc093538
