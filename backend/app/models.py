@@ -177,7 +177,7 @@ class Todo(TodoBase, table=True):
     )
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
-    category_id: uuid.UUID = Field(foreign_key="category.id", nullable=True)
+    category_id: uuid.UUID = Field(default=None, foreign_key="category.id", nullable=True)
     category: Optional['Category']  = Relationship(back_populates='todos')
     collaborators: list["Collaborator"] = Relationship(back_populates="todo")
     subtodos: list["SubTodo"] = Relationship(back_populates="todo", cascade_delete=True)
