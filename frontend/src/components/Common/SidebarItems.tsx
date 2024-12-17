@@ -1,31 +1,18 @@
-<<<<<<< HEAD
 import { Box, Flex, Icon, Text, useColorModeValue } from '@chakra-ui/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { FiBriefcase, FiHome, FiSettings, FiUsers } from 'react-icons/fi';
+import { FiBriefcase, FiHome, FiSettings, FiShare2, FiUsers } from 'react-icons/fi';
 import { BiSolidCategory } from "react-icons/bi";
-=======
-import { Box, Flex, Icon, Text, useColorModeValue } from "@chakra-ui/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { FiBriefcase, FiHome, FiSettings, FiShare2, FiUsers } from "react-icons/fi";
->>>>>>> 240942e0aa8b44cbe3fdef2ac5a7f77adc093538
+
 
 import type { UserPublic } from "../../client";
 
 const items = [
-<<<<<<< HEAD
-  { icon: FiHome, title: 'Dashboard', path: '/' },
-  { icon: FiBriefcase, title: 'Todo', path: '/todos' },
-  { icon: FiSettings, title: 'User Settings', path: '/settings' },
-  { icon: BiSolidCategory, title: 'Categories', path: '/categories' },
-
-=======
   { icon: FiHome, title: "Dashboard", path: "/" },
   { icon: FiBriefcase, title: "Task", path: "/todos" },
   { icon: FiSettings, title: "User Settings", path: "/settings" },
   { icon: FiShare2, title: "Shared Task", path: "/invitionConfirm" },
->>>>>>> 240942e0aa8b44cbe3fdef2ac5a7f77adc093538
+  { icon: BiSolidCategory, title: 'Categories', path: '/categories' },
 ];
 
 interface SidebarItemsProps {
