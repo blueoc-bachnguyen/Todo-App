@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message, SubTodo, SubTodosPublic
+from app.models import Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, Message, SubTodo, SubTodosPublic, TodoUpdateMultiple
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 
@@ -47,6 +47,21 @@ def read_todos(
         todos = session.exec(statement).all()
     return TodosPublic(data=todos, count=count)
 
+@router.put("/update_multiple_todos", response_model=list[TodoPublic])
+def update_multiple_todos(
+    *, session: SessionDep, current_user: CurrentUser, todo_in: TodoUpdateMultiple
+) -> Any:
+    todos = session.exec(select(Todo).where(Todo.id.in_(todo_in.todo_ids))).all()
+    if not todos:
+        raise HTTPException(status_code=404, detail="No tasks found")
+    for todo in todos:
+        if not current_user.is_superuser and todo.owner_id != current_user.id:
+            raise HTTPException(status_code=400, detail="Not enough permissions")
+        todo.status = todo_in.status
+        session.add(todo)
+        session.commit()
+        session.refresh(todo)
+    return todos
 
 @router.get("/{id}", response_model=TodoPublic)
 def read_todo(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:

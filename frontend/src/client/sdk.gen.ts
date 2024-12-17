@@ -54,6 +54,8 @@ import type {
   UtilsTestEmailData,
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
+  TodosUpdateMultipleTodosResponse,
+  TodosUpdateMultipleTodosData,
 } from './types.gen';
 
 // Todo
@@ -155,6 +157,20 @@ export class TodosService {
     });
   }
 
+  public static updateMultipleTodos(
+    data: TodosUpdateMultipleTodosData
+  ): CancelablePromise<TodosUpdateMultipleTodosResponse> {
+      return __request(OpenAPI, {
+        method: 'PUT',
+        url: '/api/v1/todos/update_multiple_todos',
+        body: data.requestBody,
+        mediaType: 'application/json',
+        errors: {
+          422: 'Validation Error',
+        },
+      });
+  }
+
   /**
    * Delete Todo
    * Delete an todo.
@@ -177,7 +193,9 @@ export class TodosService {
       },
     });
   }
+  
 }
+
 
 // SubTodo
 export class SubTodosService {
