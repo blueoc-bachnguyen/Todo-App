@@ -6,7 +6,7 @@ from sqlmodel import func, select
 from sqlalchemy import and_
 
 from app import crud
-from app.crud import get_collaborators_by_todo
+from app.crud import check_todo_access, get_collaborators_by_todo
 from app.api.deps import CurrentUser, SessionDep
 from app.models import (
     Todo, TodoCreate, TodoPublic, TodosPublic, TodoUpdate, 
