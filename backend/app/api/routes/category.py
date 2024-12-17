@@ -2,7 +2,6 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter
-from sqlmodel import func, select
 
 from app import crud
 
@@ -10,8 +9,6 @@ from app.api.deps import CurrentUser, SessionDep
 from app.models import  Message, Category, ListCategories, CategoryCreate, CategoryUpdate
 
 router = APIRouter(prefix="/categories", tags=["categories"])
-
-
 
 #  POST[/categories]
 @router.post("/", response_model=Category)

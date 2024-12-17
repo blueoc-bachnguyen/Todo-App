@@ -137,9 +137,9 @@ class Todo(TodoBase, table=True):
     )
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
-    subtodos: list["SubTodo"] = Relationship(back_populates="todo")
     category_id: uuid.UUID = Field(foreign_key="category.id", nullable=True)
     category: Optional['Category']  = Relationship(back_populates='todos')
+    subtodos: list["SubTodo"] = Relationship(back_populates="todo", cascade_delete=True)
 
 class TodoCreate(TodoBase):
     pass
@@ -159,6 +159,10 @@ class TodosPublic(SQLModel):
     data: list[TodoPublic]
     count: int
 
+class TodoUpdateMultiple(SQLModel):
+    todo_ids: list[uuid.UUID]
+    status: str
+    
 # Table SubTodo
 class SubTodoBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)

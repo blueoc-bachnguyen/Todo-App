@@ -17,11 +17,13 @@ import {
   ModalContent,
   ModalCloseButton,
   useDisclosure,
+  Checkbox,
 } from '@chakra-ui/react';
 import { z } from 'zod';
+import { FaPlus } from 'react-icons/fa6';
 import { IoIosList } from 'react-icons/io';
 import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 
 import { Button } from '../../components/ui/button';
@@ -31,9 +33,19 @@ import Delete from '../../components/Common/DeleteAlert.tsx';
 import ActionsMenu from '../../components/Common/ActionsMenu.tsx';
 import EditSubTodo from '../../components/SubTodo/EditSubTodo.tsx';
 import { PaginationFooter } from '../../components/Common/PaginationFooter.tsx';
+import { IoIosStar, IoIosStarOutline } from 'react-icons/io';
 
 import { SubTodoPublic } from '../../client/index.ts';
 import { TodosService, SubTodosService } from '../../client/index.ts';
+import { ApiError } from '../../client/index.ts';
+import { TodoUpdateMultiple } from '../../client/index.ts';
+import useCustomToast from '../../hooks/useCustomToast.ts';
+import { handleError } from "../../utils"
+import AddSubTodo from '../../components/SubTodo/AddSubTodo.tsx';
+
+interface TodoUpdateMultipleForm extends TodoUpdateMultiple {
+  todo_ids: string[]
+}
 
 export const Route = createFileRoute('/_layout/todos')({
   component: Todos,
@@ -61,12 +73,13 @@ const getSubTodosQueryOptions = (todo_id: string) => {
   };
 };
 
-function TodosTable({ searchQuery }: { searchQuery: string }) {
+function TodosTable({ searchQuery, selectedIds, setSelectedIds }: { searchQuery: string, selectedIds: string[], setSelectedIds: (todoIds: string[]) => void }) {
   const { page } = Route.useSearch();
   const queryClient = useQueryClient();
   const [selectedSubTodo, setSelectedSubTodo] = useState<SubTodoPublic | null>(
     null
   );
+  const addSubTodoModal = useDisclosure();
   const editSubTodoModal = useDisclosure();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -75,6 +88,8 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
   const [isDeleteSubTodoModalOpen, setIsDeleteSubTodoModalOpen] =
     useState(false);
   const [deleteSubTodoId, setDeleteSubTodoId] = useState<string | null>(null);
+  const [hover, setHover] = useState<boolean>(false);
+  const [favoriteTodos, setFavoriteTodos] = useState<string[]>([]);
 
   const handleOpenDeleteModal = (subTodoId: string, todoId: string) => {
     setDeleteSubTodoId(subTodoId);
@@ -87,6 +102,42 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
     setIsDeleteSubTodoModalOpen(false);
   };
 
+  const handleOpenAddSubTodoModal = () => {
+    addSubTodoModal.onOpen();
+  };
+  const handleCheckAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const selectedIds = todos?.data.map((todo: any) => todo.id);
+      setSelectedIds(selectedIds || []);
+    } else {
+      setSelectedIds([]);
+    }
+   
+  }
+  const handleCheckBox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    const newSelectedIds = checked
+      ? [...selectedIds, name]
+      : selectedIds.filter((id: string) => id !== name);
+    setSelectedIds(newSelectedIds);
+  };
+  
+  const handleListClick = (todoId: string) => {
+    const todo = todos?.data.find((t) => t.id === todoId);
+    setSelectedTodo(todo || null);
+    setSelectedTodoId(todoId);
+    onOpen();
+  };
+  const toggleFavorite = (todoId: string) => {
+    setFavoriteTodos((prevFavorites: string[]) => {
+      if (prevFavorites.includes(todoId)) {
+        return prevFavorites.filter((id) => id !== todoId);
+      } else {
+        return [...prevFavorites, todoId];
+      }
+    });
+  };
+
   const {
     data: todos,
     isPending,
@@ -96,11 +147,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
     placeholderData: (prevData) => prevData,
   });
 
-  const {
-    data: subtodos,
-    isFetching: isFetchingSubTodos,
-    refetch,
-  } = useQuery({
+  const { data: subtodos, isFetching: isFetchingSubTodos } = useQuery({
     ...getSubTodosQueryOptions(selectedTodoId || ''),
     enabled: !!selectedTodoId,
   });
@@ -171,18 +218,17 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         todo_id: todoId,
         requestBody: { status: newStatus },
       });
-      refetch();
+      queryClient.invalidateQueries({
+        queryKey: ['subtodos', todoId],
+        // exact: true,
+        // refetchType: 'active',
+      });
     } catch (error) {
       console.error('Failed to change status', error);
     }
   };
 
-  const handleListClick = (todoId: string) => {
-    const todo = todos?.data.find((t) => t.id === todoId);
-    setSelectedTodo(todo || null);
-    setSelectedTodoId(todoId);
-    onOpen();
-  };
+  const isAllChecked = todos?.data?.length && todos.data.every((todo: any) => selectedIds.includes(todo.id)) || false;
 
   return (
     <>
@@ -194,6 +240,9 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         >
           <Thead>
             <Tr>
+              <Th>
+                <Checkbox isChecked={isAllChecked} onChange={handleCheckAll}/>
+              </Th>
               <Th>ID</Th>
               <Th>Title</Th>
               <Th>Description</Th>
@@ -230,6 +279,9 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                 )
                 .map((todo) => (
                   <Tr key={todo.id} opacity={isPlaceholderData ? 0.5 : 1}>
+                    <Td>
+                      <Checkbox isChecked={selectedIds.includes(todo.id)} name={todo.id} value={todo.id} onChange={handleCheckBox}/>
+                    </Td>
                     <Td>{todo.id}</Td>
                     <Td isTruncated maxWidth="150px">
                       {todo.title}
@@ -274,12 +326,40 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                       <ActionsMenu type={'Todo'} value={todo} />
                     </Td>
                     <Td>
-                      <IoIosList
-                        size={20}
+                      <button
+                        style={{
+                          borderRadius: '50%',
+                          backgroundColor: '#0D92F4',
+                          width: '48px',
+                          height: '48px',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.3s ease',
+                          outline: 'none',
+                        }}
                         onClick={() => handleListClick(todo.id)}
-                        style={{ cursor: 'pointer' }}
-                      />
+                      >
+                        <IoIosList size={20} color="white" />
+                      </button>
                     </Td>
+                    <Td>
+                    {favoriteTodos.includes(todo.id) ? (
+                      <IoIosStar
+                        size={24}
+                        color="gold"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => toggleFavorite(todo.id)}
+                      />
+                    ) : (
+                      <IoIosStarOutline
+                        size={24}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => toggleFavorite(todo.id)}
+                      />
+                    )}
+                  </Td>
                   </Tr>
                 ))}
             </Tbody>
@@ -293,13 +373,7 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
         hasPreviousPage={hasPreviousPage}
       />
 
-      <Modal
-        size="6xl"
-        isCentered
-        isOpen={isOpen}
-        onClose={onClose}
-        closeOnOverlayClick={false}
-      >
+      <Modal size="6xl" isCentered isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>All SubTodos of {selectedTodo?.title}</ModalHeader>
@@ -401,9 +475,37 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
                     ))}
                   </Tbody>
                 </Table>
+                <button
+                  style={{
+                    borderRadius: '50%',
+                    backgroundColor: '#0D92F4',
+                    width: '48px',
+                    height: '48px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: '16px',
+                    marginBottom: '16px',
+                    float: 'right',
+                    opacity: hover ? 0.8 : 1,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.3s ease',
+                    outline: 'none',
+                  }}
+                  onMouseOver={() => setHover(!hover)}
+                  onMouseOut={() => setHover(!hover)}
+                  onClick={handleOpenAddSubTodoModal}
+                >
+                  <FaPlus color="white" />
+                  <AddSubTodo
+                    isOpen={addSubTodoModal.isOpen}
+                    onClose={addSubTodoModal.onClose}
+                    todoId={selectedTodoId || ''}
+                  />
+                </button>
               </TableContainer>
             ) : (
-              <p>No subtasks available</p>
+              <p>{selectedTodo?.title} doesn't have subtodo</p>
             )}
           </ModalBody>
         </ModalContent>
@@ -433,7 +535,30 @@ function TodosTable({ searchQuery }: { searchQuery: string }) {
 
 function Todos() {
   const [searchQuery, setSearchQuery] = useState<string>(''); // Trạng thái lưu từ khóa tìm kiếm
-
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const queryClient = useQueryClient()
+  const showToast = useCustomToast()
+  
+  const mutation = useMutation({
+    mutationFn: (data: TodoUpdateMultipleForm) =>
+      TodosService.updateMultipleTodos({ requestBody: data }),
+    onSuccess: () => {
+      showToast("Success!", "User updated successfully.", "success")
+    },
+    onError: (err: ApiError) => {
+      handleError(err, showToast)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] })
+    },
+  })
+  const handleChangeStatusForSelected = async (status: string) => {
+    mutation.mutate({
+      todo_ids: selectedIds,
+      status: status as 'pending' | 'completed' | 'in_progress',
+    })
+    setSelectedIds([])
+  }
   const handleSearch = (search: string) => {
     setSearchQuery(search); // Cập nhật trạng thái tìm kiếm
   };
@@ -448,9 +573,10 @@ function Todos() {
         addModalAs={AddTodo}
         onSearch={handleSearch}
         search={searchQuery}
+        handleChangeStatusForSelected={handleChangeStatusForSelected}
       />
       
-      <TodosTable searchQuery={searchQuery} />
+      <TodosTable searchQuery={searchQuery} selectedIds={selectedIds} setSelectedIds={setSelectedIds}/>
     </Container>
   );
 }
