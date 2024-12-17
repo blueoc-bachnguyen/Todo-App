@@ -7,7 +7,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { FiEdit, FiPlus, FiTrash, FiUsers } from "react-icons/fi";
+import { FiEdit, FiLogOut, FiPlus, FiTrash, FiUsers } from "react-icons/fi";
 
 import { 
   type TodoPublic, 
@@ -16,33 +16,31 @@ import {
   type SubTodoPublic, 
   TodosService 
 } from "../../client";
-
+import EditUser from "../Admin/EditUser";
+import EditTodos from "../Todo/EditTodo";
+// import Delete from "./DeleteAlert";
 import InviteCollaborators from "../Todo/AddCollaborator";
-import Delete from './DeleteAlert';
-import EditUser from '../Admin/EditUser';
-import EditTodos from '../Todo/EditTodo';
-import AddSubTodo from '../SubTodo/AddSubTodo';
+import AddSubTodo from "../SubTodo/AddSubTodo";
+import { useQuery } from "@tanstack/react-query";
+import Delete from "../Todo/QuitCollaborate"
 
-interface ActionsMenuProps {
-  type: string;
-  value: TodoPublic | UserPublic | SubTodoPublic;
-  disabled?: boolean;
+interface ActionsMenuForCollaboratorProps {
+  type: string
+  value: TodoPublic | UserPublic
+  disabled?: boolean
 }
 
-const ActionsMenu = ({ type, value, disabled }: ActionsMenuProps) => {
+const ActionsMenuForCollaborator = ({ type, value, disabled }: ActionsMenuForCollaboratorProps) => {
   const editUserModal = useDisclosure()
-  const deleteModal = useDisclosure()
+  const QuitCollaborate = useDisclosure()
   const InviteCollaboratorsModal = useDisclosure()
   const addSubTaskModal = useDisclosure();
-
-
 const isTodoPublic = (
-  value: TodoPublic | UserPublic | SubTodoPublic
-): value is TodoPublic => {
-  return (value as TodoPublic).title !== undefined;
-};
-
-
+    value: TodoPublic | UserPublic | SubTodoPublic
+  ): value is TodoPublic => {
+    return (value as TodoPublic).title !== undefined;
+  };
+  
   return (
     <>
       <Menu>
@@ -60,13 +58,6 @@ const isTodoPublic = (
             Edit {type}
           </MenuItem>
 
-          <MenuItem
-            onClick={InviteCollaboratorsModal.onOpen}
-            icon={<FiUsers fontSize="16px" />}
-            color="unstyled"
-          >
-            Add collaborators
-          </MenuItem>
           {isTodoPublic(value) && (
             <>
               <MenuItem
@@ -83,14 +74,14 @@ const isTodoPublic = (
             </>
           )}
           <MenuItem
-            onClick={deleteModal.onOpen}
-            icon={<FiTrash fontSize="16px" />}
+            onClick={QuitCollaborate.onOpen}
+            icon={<FiLogOut fontSize="16px" />}
             color="ui.danger"
           >
-            Delete {type}
+            Quit {type}
           </MenuItem>
         </MenuList>
-        {type === 'User' ? (
+        {type === "User" ? (
           <EditUser
             user={value as UserPublic}
             isOpen={editUserModal.isOpen}
@@ -106,8 +97,8 @@ const isTodoPublic = (
         <Delete
           type={type}
           id={value.id}
-          isOpen={deleteModal.isOpen}
-          onClose={deleteModal.onClose}
+          isOpen={QuitCollaborate.isOpen}
+          onClose={QuitCollaborate.onClose}
         />
       </Menu>
       
@@ -116,7 +107,7 @@ const isTodoPublic = (
         isOpen={InviteCollaboratorsModal.isOpen}
         onClose={InviteCollaboratorsModal.onClose}/>
     </>
-  );
-};
+  )
+}
 
-export default ActionsMenu;
+export default ActionsMenuForCollaborator
