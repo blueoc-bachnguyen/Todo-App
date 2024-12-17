@@ -21,6 +21,7 @@ import { Route as LayoutTodosImport } from './routes/_layout/todos'
 import { Route as LayoutSubtodosImport } from './routes/_layout/subtodos'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutInvitionConfirmImport } from './routes/_layout/invitionConfirm'
+import { Route as LayoutCategoriesImport } from './routes/_layout/categories'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 
 // Create/Update Routes
@@ -75,6 +76,11 @@ const LayoutInvitionConfirmRoute = LayoutInvitionConfirmImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
+const LayoutCategoriesRoute = LayoutCategoriesImport.update({
+  path: '/categories',
+  getParentRoute: () => LayoutRoute,
+} as any)
+
 const LayoutAdminRoute = LayoutAdminImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
@@ -108,6 +114,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminImport
       parentRoute: typeof LayoutImport
     }
+    '/_layout/categories': {
+      preLoaderRoute: typeof LayoutCategoriesImport
+      parentRoute: typeof LayoutImport
+    }
     '/_layout/invitionConfirm': {
       preLoaderRoute: typeof LayoutInvitionConfirmImport
       parentRoute: typeof LayoutImport
@@ -136,6 +146,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren([
   LayoutRoute.addChildren([
     LayoutAdminRoute,
+    LayoutCategoriesRoute,
     LayoutInvitionConfirmRoute,
     LayoutSettingsRoute,
     LayoutSubtodosRoute,

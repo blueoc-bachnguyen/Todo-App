@@ -919,6 +919,7 @@ function Todos() {
         search={searchQuery}
         handleChangeStatusForSelected={handleChangeStatusForSelected}
       />
+      
       <TodosTable searchQuery={searchQuery} selectedIds={selectedIds} setSelectedIds={setSelectedIds}/>
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
         Collaborated To Do 

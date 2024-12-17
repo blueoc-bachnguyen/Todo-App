@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
-
-from sqlmodel import Session, select
-
+import math
+from sqlmodel import Session, select,func
+from datetime import datetime
 from app.core.security import get_password_hash, verify_password
-from app.models import Collaborator, Item, ItemCreate, Todo, TodoCreate, User, UserCreate, UserUpdate, SubTodoCreate, CollaboratorUpdate
+from fastapi import HTTPException
+from app.models import Collaborator, Item, ItemCreate, Todo, TodoCreate, User, UserCreate, UserUpdate, SubTodoCreate, CollaboratorUpdate,Category,CategoryCreate,CategoryUpdate,ListCategories,LevelEnum,Message
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -61,6 +62,82 @@ def create_subtodo(*, session: Session, item_in: SubTodoCreate, owner_id: uuid.U
     session.refresh(db_item)
     return db_item
 
+
+
+
+def create_category(*, session: Session, cat_in: CategoryCreate, owner_id: uuid.UUID) -> Category:
+    db_cat = Category.model_validate(cat_in, update={"owner_id": owner_id})
+    session.add(db_cat)
+    session.commit()
+    session.refresh(db_cat)
+    return db_cat
+
+def get_all_categories(session: Session, owner_id: uuid.UUID, page: int, limit: int, sort: str) -> ListCategories:
+    offset = (page - 1) * limit
+    count_statement = (
+            select(func.count())
+            .select_from(Category)
+            .where(Category.owner_id == owner_id)
+        )
+    count = session.exec(count_statement).one()
+
+    # Sort
+    if sort == "desc":
+        order_by_clause = Category.level.desc()
+    elif sort == "asc":
+        order_by_clause = Category.level.asc()
+    else:
+        order_by_clause = Category.created_at.desc()
+
+    statement = (
+            select(Category)
+            .where(Category.owner_id == owner_id)
+            .offset(offset)
+            .limit(limit)
+            .order_by(order_by_clause)
+        )
+    items = session.exec(statement).all()
+    pages = math.ceil(count / limit)
+    return ListCategories(data=items, pages=pages)
+
+
+def get_category(session: Session, cat_id: uuid.UUID, owner_id: uuid.UUID):
+    cat = session.query(Category).filter(Category.id == cat_id, Category.owner_id == owner_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return cat
+
+
+def update_category(session: Session, cat_id: uuid.UUID, owner_id: uuid.UUID, cat_in: CategoryUpdate):
+    cat = session.query(Category).filter(Category.id == cat_id, Category.owner_id == owner_id).first()
+
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    update_dict = cat_in.model_dump(exclude_unset=True)
+    cat.updated_at = datetime.now()
+    cat.sqlmodel_update(update_dict)
+    session.add(cat)
+    session.commit()
+    session.refresh(cat)
+    return cat
+
+def delete_category(session: Session, cat_id: uuid.UUID, owner_id: uuid.UUID):
+    cat = session.query(Category).filter(Category.id == cat_id, Category.owner_id == owner_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="cat not found")
+    session.delete(cat)
+    session.commit()
+    return Message(message="cat deleted successfully")
+
+
+def delete_all_categories(session: Session, owner_id: uuid.UUID):
+    statement = select(Category).where(Category.owner_id == owner_id)
+    cats = session.exec(statement).all()
+
+    for cat in cats:
+        session.delete(cat)
+    session.commit()
+    return Message(message="all cats deleted successfully")
 
 # New function query for inviting collaborators
 def add_collaborator_by_invite_code(

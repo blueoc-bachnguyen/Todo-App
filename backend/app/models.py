@@ -4,7 +4,9 @@ from enum import Enum
 from secrets import token_hex
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
-from typing import Optional
+from typing import List, Optional
+
+
 
 # Shared properties
 class UserBase(SQLModel):
@@ -76,6 +78,7 @@ class User(UserBase, table=True):
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
     todos: list["Todo"] = Relationship(back_populates="owner", cascade_delete=True)
+    categories: list["Category"] = Relationship(back_populates="owner")
     invite_code: str = Field(default_factory=lambda: token_hex(4), unique=True, index=True)
     collaborations: list["Collaborator"] = Relationship(back_populates="user")
 
@@ -174,6 +177,8 @@ class Todo(TodoBase, table=True):
     )
     status: str = Field(default="in_progress", max_length=255)
     owner: User | None = Relationship(back_populates="todos")
+    category_id: uuid.UUID = Field(default=None, foreign_key="category.id", nullable=True)
+    category: Optional['Category']  = Relationship(back_populates='todos')
     collaborators: list["Collaborator"] = Relationship(back_populates="todo")
     subtodos: list["SubTodo"] = Relationship(back_populates="todo", cascade_delete=True)
 
@@ -233,3 +238,37 @@ class SubTodoPublic(SubTodoBase):
 class SubTodosPublic(SQLModel):
     data: list[SubTodoPublic]
     count: int
+
+
+#  ===== CATEGORY ===========
+class LevelEnum(str, Enum):
+    LOW='low'
+    MEDIUM='medium'
+    HIGH='high'
+
+class CategoryBase(SQLModel):
+    title: str = Field(default=None, max_length=255)
+    desc: str = Field(default=None, max_length=255)
+    level: LevelEnum = Field(default=LevelEnum.LOW, max_length=255)
+    created_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
+    updated_at: datetime | None = Field(default_factory=datetime.now, nullable=True)
+
+class Category(CategoryBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
+    owner: User | None = Relationship(back_populates="categories")
+    todos: List['Todo'] = Relationship(back_populates="category")
+
+class CategoryCreate(CategoryBase):
+     pass
+
+class CategoryUpdate(CategoryBase):
+    title: str | None = Field(default=None, max_length=255)
+    desc : str | None = Field(default=None, max_length=255)
+
+
+class ListCategories(SQLModel):
+    data: list[Category]
+    pages: int
