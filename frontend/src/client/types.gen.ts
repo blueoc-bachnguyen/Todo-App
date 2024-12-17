@@ -196,11 +196,22 @@ export type TodosDeleteTodoData = {
 
 export type TodosDeleteTodoResponse = Message;
 
+export type TodoUpdateMultiple = {
+  todo_ids: string[];
+  status: 'pending' | 'completed' | 'in_progress';
+};
+
+export type TodosUpdateMultipleTodosData = {
+  requestBody: TodoUpdateMultiple;
+};
+
+export type TodosUpdateMultipleTodosResponse = TodoPublic[];
 // SubTodo
 export type SubTodosReadSubTodosData = {
   limit?: number;
   skip?: number;
 };
+
 
 export type SubTodosReadSubTodosResponse = SubTodosPublic;
 

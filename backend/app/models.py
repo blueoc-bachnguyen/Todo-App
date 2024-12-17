@@ -195,6 +195,10 @@ class TodosPublic(SQLModel):
     data: list[TodoPublic]
     count: int
 
+class TodoUpdateMultiple(SQLModel):
+    todo_ids: list[uuid.UUID]
+    status: str
+    
 # Table SubTodo
 class SubTodoBase(SQLModel):
     title: str = Field(min_length=1, max_length=255)
